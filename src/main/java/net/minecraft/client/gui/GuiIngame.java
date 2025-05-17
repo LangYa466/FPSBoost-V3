@@ -6,6 +6,9 @@ import com.google.common.collect.Lists;
 import java.util.Collection;
 import java.util.List;
 import java.util.Random;
+
+import net.fpsboost.Client;
+import net.fpsboost.events.Render2DEvent;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
@@ -171,6 +174,9 @@ public class GuiIngame extends Gui
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
         this.mc.getTextureManager().bindTexture(icons);
         GlStateManager.enableBlend();
+
+        Render2DEvent render2DEvent = new Render2DEvent(partialTicks, scaledresolution);
+        Client.eventManager.call(render2DEvent);
 
         if (this.showCrosshair())
         {

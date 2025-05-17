@@ -1,5 +1,7 @@
 package net.minecraft.client.entity;
 
+import net.fpsboost.Client;
+import net.fpsboost.events.UpdateEvent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.MovingSoundMinecartRiding;
 import net.minecraft.client.audio.PositionedSoundRecord;
@@ -167,6 +169,9 @@ public class EntityPlayerSP extends AbstractClientPlayer
      */
     public void onUpdate()
     {
+        UpdateEvent updateEvent = new UpdateEvent();
+        Client.eventManager.call(updateEvent);
+
         if (this.worldObj.isBlockLoaded(new BlockPos(this.posX, 0.0D, this.posZ)))
         {
             super.onUpdate();
