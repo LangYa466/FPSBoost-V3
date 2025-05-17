@@ -1,7 +1,9 @@
 package net.minecraft.client.multiplayer;
 
 import com.google.common.collect.Lists;
-import java.util.List;
+import com.google.common.collect.Sets; // <<< MODIFIED: Added import for Sets
+import java.util.Set; // <<< MODIFIED: Added import for Set
+import java.util.List; // Still needed for IChunkProvider interface, but chunkListing is now a Set
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.IProgressUpdate;
@@ -25,7 +27,9 @@ public class ChunkProviderClient implements IChunkProvider
      */
     private Chunk blankChunk;
     private LongHashMap<Chunk> chunkMapping = new LongHashMap();
-    private List<Chunk> chunkListing = Lists.<Chunk>newArrayList();
+    // <<< MODIFIED: Changed from List<Chunk> to Set<Chunk> for better remove performance.
+    // Original: private List<Chunk> chunkListing = Lists.<Chunk>newArrayList();
+    private Set<Chunk> chunkListing = Sets.<Chunk>newLinkedHashSet();
 
     /** Reference to the World object. */
     private World worldObj;
@@ -58,12 +62,13 @@ public class ChunkProviderClient implements IChunkProvider
         }
 
         this.chunkMapping.remove(ChunkCoordIntPair.chunkXZ2Int(x, z));
+        // <<< MODIFIED: remove from Set is O(1) on average, was O(N) for ArrayList
         this.chunkListing.remove(chunk);
     }
 
     /**
      * loads or generates the chunk at the chunk location specified
-     *  
+     *
      * @param chunkX x coord of the chunk to load (block coord >> 4)
      * @param chunkZ z coord of the chunk to load (block coord >> 4)
      */
@@ -71,7 +76,7 @@ public class ChunkProviderClient implements IChunkProvider
     {
         Chunk chunk = new Chunk(this.worldObj, chunkX, chunkZ);
         this.chunkMapping.add(ChunkCoordIntPair.chunkXZ2Int(chunkX, chunkZ), chunk);
-        this.chunkListing.add(chunk);
+        this.chunkListing.add(chunk); // Add to Set is O(1) on average
         chunk.setChunkLoaded(true);
         return chunk;
     }
@@ -108,16 +113,20 @@ public class ChunkProviderClient implements IChunkProvider
      */
     public boolean unloadQueuedChunks()
     {
-        long i = System.currentTimeMillis();
+        // <<< MODIFIED: Optimized timing logic
+        long startTime = System.currentTimeMillis();
 
         for (Chunk chunk : this.chunkListing)
         {
-            chunk.func_150804_b(System.currentTimeMillis() - i > 5L);
+            // Pass true if more than 5ms have elapsed *since startTime*
+            chunk.func_150804_b(System.currentTimeMillis() - startTime > 5L);
         }
 
-        if (System.currentTimeMillis() - i > 100L)
+        long elapsedTime = System.currentTimeMillis() - startTime;
+        if (elapsedTime > 100L)
         {
-            logger.info("Warning: Clientside chunk ticking took {} ms", new Object[] {Long.valueOf(System.currentTimeMillis() - i)});
+            // Original: logger.info("Warning: Clientside chunk ticking took {} ms", new Object[] {Long.valueOf(System.currentTimeMillis() - i)});
+            logger.info("Warning: Clientside chunk ticking took {} ms", elapsedTime);
         }
 
         return false;

@@ -1,11 +1,13 @@
 package net.minecraft.client.model;
 
 import com.google.common.collect.Lists;
+import java.util.ArrayList; // Added for ArrayList
 import java.util.List;
 import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.WorldRenderer;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats; // Needed for WorldRenderer.begin
 import org.lwjgl.opengl.GL11;
 
 public class ModelRenderer
@@ -49,7 +51,7 @@ public class ModelRenderer
         this.textureWidth = 64.0F;
         this.textureHeight = 32.0F;
         this.showModel = true;
-        this.cubeList = Lists.<ModelBox>newArrayList();
+        this.cubeList = new ArrayList<>(); // Use diamond operator
         this.baseModel = model;
         model.boxList.add(this);
         this.boxName = boxNameIn;
@@ -74,7 +76,7 @@ public class ModelRenderer
     {
         if (this.childModels == null)
         {
-            this.childModels = Lists.<ModelRenderer>newArrayList();
+            this.childModels = new ArrayList<>(); // Use diamond operator
         }
 
         this.childModels.add(renderer);
@@ -144,9 +146,9 @@ public class ModelRenderer
 
                         if (this.childModels != null)
                         {
-                            for (int k = 0; k < this.childModels.size(); ++k)
+                            for (ModelRenderer childModel : this.childModels)
                             {
-                                ((ModelRenderer)this.childModels.get(k)).render(p_78785_1_);
+                                childModel.render(p_78785_1_);
                             }
                         }
                     }
@@ -157,9 +159,9 @@ public class ModelRenderer
 
                         if (this.childModels != null)
                         {
-                            for (int j = 0; j < this.childModels.size(); ++j)
+                            for (ModelRenderer childModel : this.childModels)
                             {
-                                ((ModelRenderer)this.childModels.get(j)).render(p_78785_1_);
+                                childModel.render(p_78785_1_);
                             }
                         }
 
@@ -173,26 +175,26 @@ public class ModelRenderer
 
                     if (this.rotateAngleZ != 0.0F)
                     {
-                        GlStateManager.rotate(this.rotateAngleZ * (180F / (float)Math.PI), 0.0F, 0.0F, 1.0F);
+                        GlStateManager.rotate((float)Math.toDegrees(this.rotateAngleZ), 0.0F, 0.0F, 1.0F);
                     }
 
                     if (this.rotateAngleY != 0.0F)
                     {
-                        GlStateManager.rotate(this.rotateAngleY * (180F / (float)Math.PI), 0.0F, 1.0F, 0.0F);
+                        GlStateManager.rotate((float)Math.toDegrees(this.rotateAngleY), 0.0F, 1.0F, 0.0F);
                     }
 
                     if (this.rotateAngleX != 0.0F)
                     {
-                        GlStateManager.rotate(this.rotateAngleX * (180F / (float)Math.PI), 1.0F, 0.0F, 0.0F);
+                        GlStateManager.rotate((float)Math.toDegrees(this.rotateAngleX), 1.0F, 0.0F, 0.0F);
                     }
 
                     GlStateManager.callList(this.displayList);
 
                     if (this.childModels != null)
                     {
-                        for (int i = 0; i < this.childModels.size(); ++i)
+                        for (ModelRenderer childModel : this.childModels)
                         {
-                            ((ModelRenderer)this.childModels.get(i)).render(p_78785_1_);
+                            childModel.render(p_78785_1_);
                         }
                     }
 
@@ -220,17 +222,17 @@ public class ModelRenderer
 
                 if (this.rotateAngleY != 0.0F)
                 {
-                    GlStateManager.rotate(this.rotateAngleY * (180F / (float)Math.PI), 0.0F, 1.0F, 0.0F);
+                    GlStateManager.rotate((float)Math.toDegrees(this.rotateAngleY), 0.0F, 1.0F, 0.0F);
                 }
 
                 if (this.rotateAngleX != 0.0F)
                 {
-                    GlStateManager.rotate(this.rotateAngleX * (180F / (float)Math.PI), 1.0F, 0.0F, 0.0F);
+                    GlStateManager.rotate((float)Math.toDegrees(this.rotateAngleX), 1.0F, 0.0F, 0.0F);
                 }
 
                 if (this.rotateAngleZ != 0.0F)
                 {
-                    GlStateManager.rotate(this.rotateAngleZ * (180F / (float)Math.PI), 0.0F, 0.0F, 1.0F);
+                    GlStateManager.rotate((float)Math.toDegrees(this.rotateAngleZ), 0.0F, 0.0F, 1.0F);
                 }
 
                 GlStateManager.callList(this.displayList);
@@ -266,17 +268,17 @@ public class ModelRenderer
 
                     if (this.rotateAngleZ != 0.0F)
                     {
-                        GlStateManager.rotate(this.rotateAngleZ * (180F / (float)Math.PI), 0.0F, 0.0F, 1.0F);
+                        GlStateManager.rotate((float)Math.toDegrees(this.rotateAngleZ), 0.0F, 0.0F, 1.0F);
                     }
 
                     if (this.rotateAngleY != 0.0F)
                     {
-                        GlStateManager.rotate(this.rotateAngleY * (180F / (float)Math.PI), 0.0F, 1.0F, 0.0F);
+                        GlStateManager.rotate((float)Math.toDegrees(this.rotateAngleY), 0.0F, 1.0F, 0.0F);
                     }
 
                     if (this.rotateAngleX != 0.0F)
                     {
-                        GlStateManager.rotate(this.rotateAngleX * (180F / (float)Math.PI), 1.0F, 0.0F, 0.0F);
+                        GlStateManager.rotate((float)Math.toDegrees(this.rotateAngleX), 1.0F, 0.0F, 0.0F);
                     }
                 }
             }
@@ -292,11 +294,15 @@ public class ModelRenderer
         GL11.glNewList(this.displayList, GL11.GL_COMPILE);
         WorldRenderer worldrenderer = Tessellator.getInstance().getWorldRenderer();
 
+        // Assuming ModelBox.render uses DefaultVertexFormats.POSITION_TEX_NORMAL or similar for which begin is appropriate
+        // For compatibility with original code, not adding specific vertex format, but it's good practice.
+        // worldrenderer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_NORMAL); // Example, actual format depends on ModelBox
+
         for (int i = 0; i < this.cubeList.size(); ++i)
         {
             ((ModelBox)this.cubeList.get(i)).render(worldrenderer, scale);
         }
-
+        // worldrenderer.finishDrawing(); // if begin was called with a specific format
         GL11.glEndList();
         this.compiled = true;
     }

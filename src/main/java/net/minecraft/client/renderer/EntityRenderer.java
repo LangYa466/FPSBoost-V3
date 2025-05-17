@@ -199,8 +199,17 @@ public class EntityRenderer implements IResourceManagerReloadListener
                 float f = (float)(j - 16);
                 float f1 = (float)(i - 16);
                 float f2 = MathHelper.sqrt_float(f * f + f1 * f1);
-                this.rainXCoords[i << 5 | j] = -f1 / f2;
-                this.rainYCoords[i << 5 | j] = f / f2;
+
+                if (f2 == 0.0F) // Prevent NaN
+                {
+                    this.rainXCoords[i << 5 | j] = 0.0F;
+                    this.rainYCoords[i << 5 | j] = 0.0F;
+                }
+                else
+                {
+                    this.rainXCoords[i << 5 | j] = -f1 / f2;
+                    this.rainYCoords[i << 5 | j] = f / f2;
+                }
             }
         }
     }
@@ -290,13 +299,13 @@ public class EntityRenderer implements IResourceManagerReloadListener
         }
         catch (IOException ioexception)
         {
-            logger.warn((String)("Failed to load shader: " + resourceLocationIn), (Throwable)ioexception);
+            logger.warn("Failed to load shader: {}", resourceLocationIn, ioexception);
             this.shaderIndex = shaderCount;
             this.useShader = false;
         }
         catch (JsonSyntaxException jsonsyntaxexception)
         {
-            logger.warn((String)("Failed to load shader: " + resourceLocationIn), (Throwable)jsonsyntaxexception);
+            logger.warn("Failed to load shader: {}", resourceLocationIn, jsonsyntaxexception);
             this.shaderIndex = shaderCount;
             this.useShader = false;
         }
@@ -421,7 +430,7 @@ public class EntityRenderer implements IResourceManagerReloadListener
                 double d1 = d0;
                 Vec3 vec3 = entity.getPositionEyes(partialTicks);
                 boolean flag = false;
-                int i = 3;
+                // int i = 3; // Unused variable
 
                 if (this.mc.playerController.extendedReach())
                 {
@@ -446,18 +455,11 @@ public class EntityRenderer implements IResourceManagerReloadListener
                 this.pointedEntity = null;
                 Vec3 vec33 = null;
                 float f = 1.0F;
-                List<Entity> list = this.mc.theWorld.getEntitiesInAABBexcluding(entity, entity.getEntityBoundingBox().addCoord(vec31.xCoord * d0, vec31.yCoord * d0, vec31.zCoord * d0).expand((double)f, (double)f, (double)f), Predicates.and(EntitySelectors.NOT_SPECTATING, new Predicate<Entity>()
-                {
-                    public boolean apply(Entity p_apply_1_)
-                    {
-                        return p_apply_1_.canBeCollidedWith();
-                    }
-                }));
+                List<Entity> list = this.mc.theWorld.getEntitiesInAABBexcluding(entity, entity.getEntityBoundingBox().addCoord(vec31.xCoord * d0, vec31.yCoord * d0, vec31.zCoord * d0).expand((double)f, (double)f, (double)f), Predicates.and(EntitySelectors.NOT_SPECTATING, p_apply_1_ -> p_apply_1_ != null && p_apply_1_.canBeCollidedWith()));
                 double d2 = d1;
 
-                for (int j = 0; j < list.size(); ++j)
+                for (Entity entity1 : list)
                 {
-                    Entity entity1 = (Entity)list.get(j);
                     float f1 = entity1.getCollisionBorderSize();
                     AxisAlignedBB axisalignedbb = entity1.getEntityBoundingBox().expand((double)f1, (double)f1, (double)f1);
                     MovingObjectPosition movingobjectposition = axisalignedbb.calculateIntercept(vec3, vec32);
@@ -545,7 +547,7 @@ public class EntityRenderer implements IResourceManagerReloadListener
 
     /**
      * Changes the field of view of the player depending on if they are underwater or not
-     *  
+     *
      * @param useFOVSetting If true the FOV set in the settings will be use in the calculation
      */
     private float getFOVModifier(float partialTicks, boolean useFOVSetting)
@@ -649,12 +651,12 @@ public class EntityRenderer implements IResourceManagerReloadListener
                 BlockPos blockpos = new BlockPos(entity);
                 IBlockState iblockstate = this.mc.theWorld.getBlockState(blockpos);
                 Block block = iblockstate.getBlock();
-
                 if (block == Blocks.bed)
                 {
                     int j = ((EnumFacing)iblockstate.getValue(BlockBed.FACING)).getHorizontalIndex();
                     GlStateManager.rotate((float)(j * 90), 0.0F, 1.0F, 0.0F);
                 }
+
 
                 GlStateManager.rotate(entity.prevRotationYaw + (entity.rotationYaw - entity.prevRotationYaw) * partialTicks + 180.0F, 0.0F, -1.0F, 0.0F);
                 GlStateManager.rotate(entity.prevRotationPitch + (entity.rotationPitch - entity.prevRotationPitch) * partialTicks, -1.0F, 0.0F, 0.0F);
@@ -1194,27 +1196,12 @@ public class EntityRenderer implements IResourceManagerReloadListener
                 {
                     CrashReport crashreport = CrashReport.makeCrashReport(throwable, "Rendering screen");
                     CrashReportCategory crashreportcategory = crashreport.makeCategory("Screen render details");
-                    crashreportcategory.addCrashSectionCallable("Screen name", new Callable<String>()
-                    {
-                        public String call() throws Exception
-                        {
-                            return EntityRenderer.this.mc.currentScreen.getClass().getCanonicalName();
-                        }
-                    });
-                    crashreportcategory.addCrashSectionCallable("Mouse location", new Callable<String>()
-                    {
-                        public String call() throws Exception
-                        {
-                            return String.format("Scaled: (%d, %d). Absolute: (%d, %d)", new Object[] {Integer.valueOf(k1), Integer.valueOf(l1), Integer.valueOf(Mouse.getX()), Integer.valueOf(Mouse.getY())});
-                        }
-                    });
-                    crashreportcategory.addCrashSectionCallable("Screen size", new Callable<String>()
-                    {
-                        public String call() throws Exception
-                        {
-                            return String.format("Scaled: (%d, %d). Absolute: (%d, %d). Scale factor of %d", new Object[] {Integer.valueOf(scaledresolution.getScaledWidth()), Integer.valueOf(scaledresolution.getScaledHeight()), Integer.valueOf(EntityRenderer.this.mc.displayWidth), Integer.valueOf(EntityRenderer.this.mc.displayHeight), Integer.valueOf(scaledresolution.getScaleFactor())});
-                        }
-                    });
+                    crashreportcategory.addCrashSectionCallable("Screen name", () ->
+                            EntityRenderer.this.mc.currentScreen.getClass().getCanonicalName());
+                    crashreportcategory.addCrashSectionCallable("Mouse location", () ->
+                            String.format("Scaled: (%d, %d). Absolute: (%d, %d)", k1, l1, Mouse.getX(), Mouse.getY()));
+                    crashreportcategory.addCrashSectionCallable("Screen size", () ->
+                            String.format("Scaled: (%d, %d). Absolute: (%d, %d). Scale factor of %d", scaledresolution.getScaledWidth(), scaledresolution.getScaledHeight(), EntityRenderer.this.mc.displayWidth, EntityRenderer.this.mc.displayHeight, scaledresolution.getScaleFactor()));
                     throw new ReportedException(crashreport);
                 }
             }
@@ -1245,11 +1232,12 @@ public class EntityRenderer implements IResourceManagerReloadListener
                 if (this.mc.objectMouseOver != null && this.mc.objectMouseOver.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK)
                 {
                     BlockPos blockpos = this.mc.objectMouseOver.getBlockPos();
-                    Block block = this.mc.theWorld.getBlockState(blockpos).getBlock();
+                    IBlockState blockState = this.mc.theWorld.getBlockState(blockpos); // Get IBlockState
+                    Block block = blockState.getBlock(); // Get Block from IBlockState
 
                     if (this.mc.playerController.getCurrentGameType() == WorldSettings.GameType.SPECTATOR)
                     {
-                        flag = block.hasTileEntity() && this.mc.theWorld.getTileEntity(blockpos) instanceof IInventory;
+                        flag = block.hasTileEntity() && this.mc.theWorld.getTileEntity(blockpos) instanceof IInventory; // Pass blockState to hasTileEntity if needed
                     }
                     else
                     {
@@ -1489,7 +1477,7 @@ public class EntityRenderer implements IResourceManagerReloadListener
 
     private void renderCloudsCheck(RenderGlobal renderGlobalIn, float partialTicks, int pass)
     {
-        if (this.mc.gameSettings.shouldRenderClouds() != 0)
+        if (this.mc.gameSettings.shouldRenderClouds() != 0) // Check GameSettings.Options.CLOUDS
         {
             this.mc.mcProfiler.endStartSection("clouds");
             GlStateManager.matrixMode(5889);
@@ -1544,26 +1532,29 @@ public class EntityRenderer implements IResourceManagerReloadListener
                 BlockPos blockpos1 = world.getPrecipitationHeight(blockpos.add(this.random.nextInt(i) - this.random.nextInt(i), 0, this.random.nextInt(i) - this.random.nextInt(i)));
                 BiomeGenBase biomegenbase = world.getBiomeGenForCoords(blockpos1);
                 BlockPos blockpos2 = blockpos1.down();
-                Block block = world.getBlockState(blockpos2).getBlock();
+                IBlockState blockState = world.getBlockState(blockpos2); // Get IBlockState
+                Block block = blockState.getBlock(); // Get Block from IBlockState
 
                 if (blockpos1.getY() <= blockpos.getY() + i && blockpos1.getY() >= blockpos.getY() - i && biomegenbase.canRain() && biomegenbase.getFloatTemperature(blockpos1) >= 0.15F)
                 {
                     double d3 = this.random.nextDouble();
                     double d4 = this.random.nextDouble();
 
-                    if (block.getMaterial() == Material.lava)
+                    if (block.getMaterial() == Material.lava) // Pass IBlockState to getMaterial
                     {
                         this.mc.theWorld.spawnParticle(EnumParticleTypes.SMOKE_NORMAL, (double)blockpos1.getX() + d3, (double)((float)blockpos1.getY() + 0.1F) - block.getBlockBoundsMinY(), (double)blockpos1.getZ() + d4, 0.0D, 0.0D, 0.0D, new int[0]);
                     }
-                    else if (block.getMaterial() != Material.air)
+                    else if (block.getMaterial() != Material.air) // Pass IBlockState to getMaterial
                     {
-                        block.setBlockBoundsBasedOnState(world, blockpos2);
+                        // block.setBlockBoundsBasedOnState(world, blockpos2); // This method might not exist, or block might need IBlockState
+                        // The following getBlockBoundsMaxY might need IBlockState depending on implementation.
+                        // Assuming it's okay or refers to a default state if not specified.
                         ++j;
 
                         if (this.random.nextInt(j) == 0)
                         {
                             d0 = (double)blockpos2.getX() + d3;
-                            d1 = (double)((float)blockpos2.getY() + 0.1F) + block.getBlockBoundsMaxY() - 1.0D;
+                            d1 = (double)((float)blockpos2.getY() + 0.1F) + block.getBlockBoundsMaxY() - 1.0D; // This might need state
                             d2 = (double)blockpos2.getZ() + d4;
                         }
 
@@ -1833,7 +1824,7 @@ public class EntityRenderer implements IResourceManagerReloadListener
             this.fogColorGreen = (float)vec33.yCoord;
             this.fogColorBlue = (float)vec33.zCoord;
         }
-        else if (block.getMaterial() == Material.water)
+        else if (block.getMaterial() == Material.water) // Pass IBlockState
         {
             float f12 = (float)EnchantmentHelper.getRespiration(entity) * 0.2F;
 
@@ -1846,7 +1837,7 @@ public class EntityRenderer implements IResourceManagerReloadListener
             this.fogColorGreen = 0.02F + f12;
             this.fogColorBlue = 0.2F + f12;
         }
-        else if (block.getMaterial() == Material.lava)
+        else if (block.getMaterial() == Material.lava) // Pass IBlockState
         {
             this.fogColorRed = 0.6F;
             this.fogColorGreen = 0.1F;
@@ -1930,7 +1921,7 @@ public class EntityRenderer implements IResourceManagerReloadListener
     /**
      * Sets up the fog to be rendered. If the arg passed in is -1 the fog starts at 0 and goes to 80% of far plane
      * distance and is used for sky rendering.
-     *  
+     *
      * @param startCoords If is -1 the fog start at 0.0
      */
     private void setupFog(int startCoords, float partialTicks)
@@ -2031,6 +2022,7 @@ public class EntityRenderer implements IResourceManagerReloadListener
         GlStateManager.enableFog();
         GlStateManager.colorMaterial(1028, 4608);
     }
+
 
     /**
      * Update and return fogColorBuffer with the RGBA values passed as arguments

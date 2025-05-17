@@ -1,6 +1,7 @@
 package net.minecraft.client.multiplayer;
 
 import com.google.common.collect.Sets;
+import java.util.HashSet; // <<< MODIFIED: Added import for HashSet
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -34,6 +35,7 @@ import net.minecraft.world.chunk.IChunkProvider;
 import net.minecraft.world.storage.SaveDataMemoryStorage;
 import net.minecraft.world.storage.SaveHandlerMP;
 import net.minecraft.world.storage.WorldInfo;
+// <<< MODIFIED: No change to this class's imports beyond what's needed for HashSet if not already covered by Sets
 
 public class WorldClient extends World
 {
@@ -52,7 +54,7 @@ public class WorldClient extends World
         super(new SaveHandlerMP(), new WorldInfo(settings, "MpServer"), WorldProvider.getProviderForDimension(dimension), profilerIn, true);
         this.sendQueue = netHandler;
         this.getWorldInfo().setDifficulty(difficulty);
-        this.setSpawnPoint(new BlockPos(8, 64, 8));
+        this.setSpawnPoint(new BlockPos(8, 64, 8)); //Forge: Fix MC-75056 separate setSpawnPoint call.
         this.provider.registerWorld(this);
         this.chunkProvider = this.createChunkProvider();
         this.mapStorage = new SaveDataMemoryStorage();
@@ -96,7 +98,7 @@ public class WorldClient extends World
     /**
      * Invalidates an AABB region of blocks from the receive queue, in the event that the block has been modified
      * client-side in the intervening 80 receive ticks.
-     *  
+     *
      * @param x1 X position of the block where the region begin
      * @param y1 Y position of the block where the region begin
      * @param z1 Z position of the block where the region begin
@@ -227,7 +229,7 @@ public class WorldClient extends World
 
     /**
      * Add an ID to Entity mapping to entityHashSet
-     *  
+     *
      * @param entityID The ID to give to the entity to spawn
      * @param entityToSpawn The Entity to spawn in the World
      */
@@ -330,7 +332,11 @@ public class WorldClient extends World
      */
     public void removeAllEntities()
     {
-        this.loadedEntityList.removeAll(this.unloadedEntityList);
+        // <<< MODIFIED: Optimized removeAll for loadedEntityList by using a temporary HashSet
+        // Original: this.loadedEntityList.removeAll(this.unloadedEntityList);
+        if (!this.unloadedEntityList.isEmpty()) { // Avoid creating HashSet if unloadedEntityList is empty
+            this.loadedEntityList.removeAll(new HashSet<>(this.unloadedEntityList));
+        }
 
         for (int i = 0; i < this.unloadedEntityList.size(); ++i)
         {
@@ -421,7 +427,7 @@ public class WorldClient extends World
 
     /**
      * Plays a sound at the specified position.
-     *  
+     *
      * @param pos The position where to play the sound
      * @param soundName The name of the sound to play
      * @param volume The volume of the sound

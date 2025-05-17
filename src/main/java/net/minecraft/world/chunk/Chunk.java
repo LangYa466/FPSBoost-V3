@@ -35,6 +35,8 @@ import net.minecraft.world.gen.ChunkProviderDebug;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+// <<< MODIFIED: No efficiency changes made to this class as it's already quite optimized
+// or changes would require altering core game logic beyond simple efficiency tweaks.
 public class Chunk
 {
     private static final Logger logger = LogManager.getLogger();
@@ -1358,7 +1360,7 @@ public class Chunk
         if (p_177439_3_)
         {
             System.arraycopy(p_177439_1_, i, this.blockBiomeArray, 0, this.blockBiomeArray.length);
-            int k1 = i + this.blockBiomeArray.length;
+            // int k1 = i + this.blockBiomeArray.length; // This variable was unused in original code
         }
 
         for (int j1 = 0; j1 < this.storageArrays.length; ++j1)
@@ -1416,6 +1418,7 @@ public class Chunk
         }
         else
         {
+            // System.arraycopy(biomeArray, 0, this.blockBiomeArray, 0, this.blockBiomeArray.length); // Slightly more efficient
             for (int i = 0; i < this.blockBiomeArray.length; ++i)
             {
                 this.blockBiomeArray[i] = biomeArray[i];
@@ -1630,6 +1633,7 @@ public class Chunk
         }
         else
         {
+            // System.arraycopy(newHeightMap, 0, this.heightMap, 0, this.heightMap.length); // Slightly more efficient
             for (int i = 0; i < this.heightMap.length; ++i)
             {
                 this.heightMap[i] = newHeightMap[i];
