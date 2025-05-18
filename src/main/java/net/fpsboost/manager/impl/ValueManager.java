@@ -26,7 +26,9 @@ public class ValueManager extends Manager {
                     field.setAccessible(true);
                     val fieldObj = field.get(module);
                     if (Value.class.isAssignableFrom(field.getType())) {
-                        module.getValues().add((Value<?>) fieldObj);
+                        val valueObj = (Value<?>) fieldObj;
+                        valueObj.moduleName = module.getName();
+                        module.getValues().add(valueObj);
                     }
 
                     if (Drag.class.isAssignableFrom(field.getType())) {

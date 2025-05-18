@@ -1,7 +1,7 @@
 package net.fpsboost.module.impl.misc;
 
-import com.cubk.event.annotations.EventTarget;
-import net.fpsboost.events.UpdateEvent;
+import net.fpsboost.event.EventTarget;
+import net.fpsboost.event.impl.UpdateEvent;
 import net.fpsboost.module.Category;
 import net.fpsboost.module.Module;
 
@@ -11,7 +11,7 @@ import net.fpsboost.module.Module;
  */
 public class Sprint extends Module {
     public Sprint() {
-        super("自动疾跑", Category.MISC);
+        super(Category.MISC);
     }
 
     @EventTarget

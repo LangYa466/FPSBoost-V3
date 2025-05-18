@@ -6,6 +6,7 @@ import net.fpsboost.manager.Manager;
 import net.fpsboost.module.Module;
 import net.fpsboost.module.impl.misc.Sprint;
 import net.fpsboost.module.impl.render.FPSDisplay;
+import net.fpsboost.module.impl.render.ModuleList;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -31,11 +32,14 @@ public class ModuleManager extends Manager {
 
         // Render
         addModule(new FPSDisplay());
+        addModule(new ModuleList());
         super.init();
     }
 
     public void addModule(Module module) {
-        modules.put(module.getName(), module);
+        String moduleName = module.getName();
+        modules.put(moduleName, module);
+        logger.info("已注册模块 {}", moduleName);
 
         // test
         module.setEnabled(true);

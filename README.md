@@ -1,5 +1,5 @@
 # FPSBoost V3
-## not Optfine
+## have Opt-fine
 ## mod loader
 
 ![run.png](run.png)

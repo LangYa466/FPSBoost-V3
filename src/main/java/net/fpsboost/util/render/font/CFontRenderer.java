@@ -81,6 +81,7 @@ public class CFontRenderer extends FontRenderer {
 
         this.atlasTextureWidth = calculateNextPowerOfTwo(this.charActualWidth * ATLAS_GRID_SIZE);
         this.atlasTextureHeight = calculateNextPowerOfTwo((this.charActualHeight + ATLAS_CHAR_HEIGHT_PADDING) * ATLAS_GRID_SIZE);
+        FONT_HEIGHT = getFontHeight();
     }
 
     public float drawCenteredString(String text, float x, float y, int color) {

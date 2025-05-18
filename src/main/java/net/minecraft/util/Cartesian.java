@@ -68,15 +68,9 @@ public class Cartesian
             this.iterables = iterables;
         }
 
-        @SuppressWarnings("unchecked")
-        public Iterator<T[]> iterator() {
-            if (this.iterables.length <= 0) {
-                T[] emptyArray = (T[]) Cartesian.createArray(this.clazz, 0);
-                List<T[]> singleton = Collections.singletonList(emptyArray);
-                return singleton.iterator();
-            } else {
-                return new Cartesian.Product.ProductIterator<>(this.clazz, this.iterables);
-            }
+        public Iterator<T[]> iterator()
+        {
+            return (this.iterables.length <= 0 ? Collections.singletonList((T[]) Cartesian.createArray(this.clazz, 0)).iterator() : new Cartesian.Product.ProductIterator(this.clazz, this.iterables));
         }
 
         static class ProductIterator<T> extends UnmodifiableIterator<T[]>

@@ -4,8 +4,6 @@ import lombok.*;
 import net.fpsboost.Client;
 import net.fpsboost.Wrapper;
 import net.fpsboost.util.misc.LogUtil;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 /**
  * @author LangYa466
@@ -15,7 +13,8 @@ import org.apache.logging.log4j.Logger;
 @Setter
 public class Manager implements Wrapper {
     public final String name;
-    private final LogUtil logger;
+    protected final LogUtil logger;
+
 
     public Manager(String name) {
         this.name = name + "Manager";
@@ -30,6 +29,7 @@ public class Manager implements Wrapper {
             logger.info("初始化完毕!");
         } catch (Exception e) {
             logger.error("{} 初始化发生错误!!", e, name);
+            logger.error(e);
             return false;
         }
         return true;

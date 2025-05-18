@@ -1,6 +1,7 @@
 package net.fpsboost.value;
 
 import lombok.Data;
+import net.fpsboost.Client;
 
 import java.util.function.BooleanSupplier;
 
@@ -13,6 +14,7 @@ public class Value<T> {
     protected T value;
     private final String name;
     private BooleanSupplier isHide = () -> false;
+    public String moduleName;
 
     public Value(String name, T value) {
         this.name = name;
@@ -23,5 +25,9 @@ public class Value<T> {
         this.name = name;
         this.value = value;
         this.isHide = isHide;
+    }
+
+    public String getDisplayName() {
+        return Client.i18nManager.get(String.format("%s.%s", moduleName, name));
     }
 }

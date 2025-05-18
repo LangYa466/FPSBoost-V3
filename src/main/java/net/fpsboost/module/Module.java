@@ -21,9 +21,13 @@ public class Module implements Wrapper {
     private boolean enabled;
     private final List<Value<?>> values = new ArrayList<>();
 
-    public Module(String name, Category category) {
-        this.name = name;
+    public Module(Category category) {
+        this.name = this.getClass().getSimpleName();
         this.category = category;
+    }
+
+    public String getDisplayName() {
+        return Client.i18nManager.get(name);
     }
 
     public void setEnabled(boolean enabled) {
