@@ -44,14 +44,14 @@ public class LogUtil {
         logger.error("{}{}", getLogPrefix(), message, args);
     }
 
-    private String cache;
+    private String cachePrefix;
     public String getLogPrefix() {
-        if (cache != null) return cache;
+        if (cachePrefix != null) return cachePrefix;
         if (!prefix.isEmpty()) {
-            cache = String.format("[%s]-[%s] ", Client.getDisplayName(), prefix);
+            cachePrefix = String.format("[%s]-[%s] ", Client.getDisplayName(), prefix);
         } else {
-            cache = String.format("[%s] ", Client.getDisplayName());
+            cachePrefix = String.format("[%s] ", Client.getDisplayName());
         }
-        return cache;
+        return cachePrefix;
     }
 }

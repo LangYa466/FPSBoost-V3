@@ -17,21 +17,20 @@ public class ModeValue extends Value<String> {
         this.modes = modes;
     }
 
-    // shit
+    // 查了下更好的写法 之前那个不太好
     public void setNextValue() {
-        int count = 0;
-        int index = 0;
-        for (String mode : modes) {
-            if (mode.equals(value)) {
-                count = index;
+        int index = -1;
+        for (int i = 0; i < modes.length; i++) {
+            if (modes[i].equals(value)) {
+                index = i;
+                break;
             }
-            count++;
         }
 
-        if (count == (modes.length - 1)) {
+        if (index == -1) {
             value = modes[0];
         } else {
-            value = modes[count + 1];
+            value = modes[(index + 1) % modes.length];
         }
     }
 }
