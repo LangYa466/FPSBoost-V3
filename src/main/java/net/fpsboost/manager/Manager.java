@@ -15,7 +15,6 @@ public class Manager implements Wrapper {
     public final String name;
     protected final LogUtil logger;
 
-
     public Manager(String name) {
         this.name = name + "Manager";
         this.logger = new LogUtil(name);

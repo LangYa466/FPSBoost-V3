@@ -20,23 +20,16 @@ public class I18nManager extends Manager {
 
     public I18nManager() {
         super("I18n");
-        logger.info("I18nManager I18nManagerI18nManager");
     }
 
     @Override
     protected void load() {
-        logger.info("I18nManager load开始");
         try {
             loadLang(Langs.CN);
-        } catch (IOException e) {
+        } catch (Exception e) {
             logger.error("读取语言文件出错", e);
-        } catch (RuntimeException e) {
-            logger.error("运行时异常", e);
         }
-        logger.info(" 666");
-        logger.info("mappppppppppp：" + i18nMap.toString());
         super.load();
-        logger.info("I18nManager load end");
     }
 
     public void loadLang(Langs langs) throws IOException {
@@ -64,6 +57,8 @@ public class I18nManager extends Manager {
 
                 i18nMap.put(key, value);
             }
+        } catch (Exception e) {
+            throw new IOException(e);
         }
     }
 

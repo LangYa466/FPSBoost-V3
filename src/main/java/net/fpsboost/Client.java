@@ -6,8 +6,8 @@ import net.fpsboost.util.misc.LogUtil;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * @author LangYa466
@@ -17,7 +17,7 @@ public class Client implements Wrapper {
     public static final String name = "FPSBoost V3";
     public static final String version = ".01";
     private static final LogUtil logger = new LogUtil();
-    public static List<Manager> managers = new ArrayList<>();
+    public static List<Manager> managers = new CopyOnWriteArrayList<>();
     public static EventManager eventManager;
     public static ModuleManager moduleManager;
     public static DragManager dragManager;
@@ -27,6 +27,7 @@ public class Client implements Wrapper {
 
     public static void initClient() {
         logger.info("初始化中");
+        long initTime = System.currentTimeMillis();
 
         try {
             if (!configDir.exists()) {
@@ -53,6 +54,8 @@ public class Client implements Wrapper {
             logger.error("初始化发生错误");
             logger.error(e);
         }
+        long endTime = System.currentTimeMillis();
+        logger.info("初始化耗时: " + (endTime - initTime) + "ms");
     }
 
     public static String getDisplayName() {
