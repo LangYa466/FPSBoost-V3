@@ -43,12 +43,6 @@ public class Client implements Wrapper {
             moduleManager = new ModuleManager();
             dragManager = new DragManager();
             valueManager = new ValueManager();
-
-            managers.forEach(manager -> {
-                if (!manager.initHasLog()) {
-                    throw new RuntimeException(manager.getName() + " 初始化失败!");
-                }
-            });
             logger.info("初始化成功");
         } catch (Exception e) {
             logger.error("初始化发生错误");

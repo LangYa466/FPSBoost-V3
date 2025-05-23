@@ -19,6 +19,10 @@ public class Manager implements Wrapper {
         this.name = name + "Manager";
         this.logger = new LogUtil(name);
         Client.managers.add(this);
+
+        if (!initHasLog()) {
+            throw new RuntimeException(name + " 初始化失败!");
+        }
     }
 
     public boolean initHasLog() {

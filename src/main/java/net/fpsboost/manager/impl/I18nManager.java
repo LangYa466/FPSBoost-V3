@@ -20,10 +20,12 @@ public class I18nManager extends Manager {
 
     public I18nManager() {
         super("I18n");
+        logger.info("666");
     }
 
     @Override
     protected void load() {
+        logger.info("777");
         try {
             loadLang(Langs.CN);
         } catch (Exception e) {
