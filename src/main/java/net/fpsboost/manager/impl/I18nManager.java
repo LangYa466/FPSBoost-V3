@@ -24,14 +24,14 @@ public class I18nManager extends Manager {
     }
 
     @Override
-    protected void load() {
+    protected void init() {
         logger.info("777");
         try {
             loadLang(Langs.CN);
         } catch (Exception e) {
             logger.error("读取语言文件出错", e);
         }
-        super.load();
+        super.init();
     }
 
     public void loadLang(Langs langs) throws IOException {
