@@ -39,6 +39,8 @@ public class Manager implements Wrapper {
     }
 
     protected void init() {}
+
+    // 这里是config用的
     protected void save() {}
     protected void load() {}
 }

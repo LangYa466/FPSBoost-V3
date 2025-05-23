@@ -18,8 +18,10 @@ import java.util.List;
 public class Module implements Wrapper {
     private final String name;
     private final Category category;
-    private boolean enabled;
+    protected boolean enabled;
     private final List<Value<?>> values = new ArrayList<>();
+    private boolean canDisplay;
+    private int keyCode;
 
     public Module(Category category) {
         this.name = this.getClass().getSimpleName();
@@ -30,12 +32,18 @@ public class Module implements Wrapper {
         return Client.i18nManager.get(name);
     }
 
+    public void onEnable() { }
+    public void onDisable() { }
+    public void onInit() { }
+
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
 
         if (enabled) {
+            onEnable();
             Client.eventManager.register(this);
         } else {
+            onDisable();
             Client.eventManager.unregister(this);
         }
     }
@@ -48,5 +56,16 @@ public class Module implements Wrapper {
 
     protected Drag createDrag() {
         return createDrag(0, 0);
+    }
+
+    public boolean isCanDisplay() {
+        if (category == Category.DEV) {
+            return Client.isDev;
+        }
+        return canDisplay;
+    }
+
+    public void toggle() {
+        setEnabled(!enabled);
     }
 }

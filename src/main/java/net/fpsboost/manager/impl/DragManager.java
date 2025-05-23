@@ -35,6 +35,15 @@ public class DragManager extends Manager {
         }).toList();
     }
 
+    public Drag getHovered(float mouseX, float mouseY) {
+        for (Drag drag : getEnabledDrags()) {
+            if (drag.isHovered(mouseX, mouseY)) {
+                return drag;
+            }
+        }
+        return null;
+    }
+
     public void addDrag(String moduleName, Drag drag) {
         drags.put(moduleName, drag);
     }

@@ -1,6 +1,7 @@
 package net.minecraft.client.entity;
 
 import net.fpsboost.Client;
+import net.fpsboost.event.impl.SendMessageEvent;
 import net.fpsboost.event.impl.UpdateEvent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.MovingSoundMinecartRiding;
@@ -229,7 +230,9 @@ public class EntityPlayerSP extends AbstractClientPlayer
 
     public void sendChatMessage(String message)
     {
-        this.sendQueue.addToSendQueue(new C01PacketChatMessage(message));
+        SendMessageEvent sendMessageEvent = new SendMessageEvent(message);
+        Client.eventManager.call(sendMessageEvent);
+        if (!sendMessageEvent.isCancelled()) this.sendQueue.addToSendQueue(new C01PacketChatMessage(sendMessageEvent.getMessage()));
     }
 
     public void swingItem()

@@ -494,7 +494,7 @@ public class TwitchStream implements BroadcastController.BroadcastListener, Chat
 
     public void func_152907_a(IngestServerTester p_152907_1_, IngestServerTester.IngestTestState p_152907_2_)
     {
-        LOGGER.debug(STREAM_MARKER, "Ingest test state changed to {}", new Object[] {p_152907_2_});
+        LOGGER.debug(STREAM_MARKER, "Ingest dev state changed to {}", new Object[] {p_152907_2_});
 
         if (p_152907_2_ == IngestServerTester.IngestTestState.Finished)
         {

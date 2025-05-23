@@ -16,16 +16,14 @@ import java.util.concurrent.ConcurrentHashMap;
  * @date 2025/5/18
  */
 public class I18nManager extends Manager {
-    private final Map<String, String> i18nMap = new ConcurrentHashMap<>();
+    private static Map<String, String> i18nMap;
 
     public I18nManager() {
         super("I18n");
-        logger.info("666");
     }
 
     @Override
     protected void init() {
-        logger.info("777");
         try {
             loadLang(Langs.CN);
         } catch (Exception e) {
@@ -40,7 +38,7 @@ public class I18nManager extends Manager {
         InputStream resource = ResourceUtil.getResource("langs/" + lang + ".lang");
         if (resource == null) throw new RuntimeException("语言资源(" + langs.getDisplayName() + ")获取失败");
 
-        i18nMap.clear(); // reload
+        i18nMap = new ConcurrentHashMap<>(); // reload
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(resource))) {
             String line;
@@ -64,8 +62,8 @@ public class I18nManager extends Manager {
         }
     }
 
-    public String get(String key) {
+    public static String get(String key) {
         if (key == null) return "NullKey";
-        return i18nMap.getOrDefault(key.toLowerCase(), key + " 66");
+        return i18nMap.getOrDefault(key.toLowerCase(), key + " NoneI18n");
     }
 }

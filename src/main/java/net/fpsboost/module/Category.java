@@ -5,5 +5,5 @@ package net.fpsboost.module;
  * @date 2025/5/17
  */
 public enum Category {
-    MISC,RENDER
+    MISC, DEV, RENDER
 }

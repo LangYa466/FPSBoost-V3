@@ -84,9 +84,14 @@ public class LogUtil {
             }
             sb.append(message, cursor, brace);
             if (argIndex < args.length) {
-                sb.append(args[argIndex++]);
+                Object arg = args[argIndex++];
+                if (!Client.isDev && (arg instanceof Double || arg instanceof Float)) {
+                    sb.append(String.format("%.2f", ((Number) arg).doubleValue()));
+                } else {
+                    sb.append(arg);
+                }
             } else {
-                sb.append("{}"); // no more args, leave as-is
+                sb.append("{}");
             }
             cursor = brace + 2;
         }

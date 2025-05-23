@@ -2,13 +2,15 @@ import java.io.File;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 
+import net.fpsboost.Client;
 import net.minecraft.client.main.Main;
 
 public class Start
 {
     public static void main(String[] args)
     {
-        Main.main(concat(new String[] {"--version", "mcp", "--accessToken", "0", "--assetsDir", "assets", "--assetIndex", "1.8", "--userProperties", "{}"}, args));
+        Client.isDev = true;
+        Main.main(concat(new String[] {"--version", "mcp", "--accessToken", "0", "--assetsDir", "assets", "--assetIndex", "1.8", "--userProperties", "{}"}, args)); // while 别在后面扔代码
     }
 
     public static <T> T[] concat(T[] first, T[] second)

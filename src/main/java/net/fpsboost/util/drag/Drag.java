@@ -2,6 +2,7 @@ package net.fpsboost.util.drag;
 
 import lombok.Data;
 import net.fpsboost.util.misc.LogUtil;
+import net.fpsboost.util.render.RenderUtil;
 import net.minecraft.client.renderer.GlStateManager;
 
 /**
@@ -12,6 +13,7 @@ import net.minecraft.client.renderer.GlStateManager;
 public class Drag {
     private final String moduleName;
     private float x, y, width, height;
+    private boolean dragging = false;
     private final LogUtil logger = new LogUtil();
 
     public void setXY(float initX, float initY) {
@@ -28,5 +30,9 @@ public class Drag {
             logger.error(moduleName, e);
         }
         GlStateManager.popMatrix();
+    }
+
+    public boolean isHovered(float mouseX, float mouseY) {
+        return RenderUtil.isHovered(x, y, width, height, mouseX, mouseY);
     }
 }

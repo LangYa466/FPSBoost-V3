@@ -14,6 +14,7 @@ import net.minecraft.client.Minecraft;
  */
 public class FPSDisplay extends Module implements FontUtil {
     private final Drag drag = createDrag();
+
     public FPSDisplay() {
         super(Category.RENDER);
     }
@@ -21,7 +22,7 @@ public class FPSDisplay extends Module implements FontUtil {
     @EventTarget
     public void onRender2D(Render2DEvent event) {
         drag.render(() -> {
-            font18.drawStringWithShadow(" TEST", 0, 0, -1);
+            font18.drawStringWithShadow(Minecraft.getDebugFPS() + " FPS", 0, 0, -1);
         });
     }
 }
