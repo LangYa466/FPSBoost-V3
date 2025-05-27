@@ -3,6 +3,7 @@ package net.fpsboost.module;
 import lombok.*;
 import net.fpsboost.Client;
 import net.fpsboost.Wrapper;
+import net.fpsboost.manager.impl.I18nManager;
 import net.fpsboost.util.drag.Drag;
 import net.fpsboost.value.Value;
 
@@ -29,7 +30,7 @@ public class Module implements Wrapper {
     }
 
     public String getDisplayName() {
-        return Client.i18nManager.get(name);
+        return I18nManager.get(name);
     }
 
     public void onEnable() { }

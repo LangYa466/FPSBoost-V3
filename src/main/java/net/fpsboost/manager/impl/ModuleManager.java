@@ -8,6 +8,7 @@ import net.fpsboost.event.impl.KeyEvent;
 import net.fpsboost.manager.Manager;
 import net.fpsboost.module.Module;
 import net.fpsboost.module.impl.dev.TestDragGUI;
+import net.fpsboost.module.impl.misc.DiscordRPC;
 import net.fpsboost.module.impl.misc.Sprint;
 import net.fpsboost.module.impl.render.FPSDisplay;
 import net.fpsboost.module.impl.render.ModuleList;
@@ -33,6 +34,7 @@ public class ModuleManager extends Manager {
 
         // Misc
         addModule(new Sprint());
+        addModule(new DiscordRPC());
 
         // Render
         addModule(new FPSDisplay());

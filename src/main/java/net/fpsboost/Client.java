@@ -1,5 +1,8 @@
 package net.fpsboost;
 
+import net.arikia.dev.drpc.DiscordEventHandlers;
+import net.arikia.dev.drpc.DiscordRPC;
+import net.arikia.dev.drpc.DiscordRichPresence;
 import net.fpsboost.manager.impl.*;
 import net.fpsboost.manager.Manager;
 import net.fpsboost.util.misc.LogUtil;
@@ -26,6 +29,8 @@ public class Client implements Wrapper {
     public static CommandManager commandManager;
     public static File configDir;
 
+    public static Thread discordRpcThread;
+
     // Start.java改
     public static boolean isDev;
 
@@ -43,12 +48,15 @@ public class Client implements Wrapper {
                 }
             }
 
+            initDiscordRPC();
+
             eventManager = new EventManager();
             i18nManager = new I18nManager();
             moduleManager = new ModuleManager();
             dragManager = new DragManager();
             valueManager = new ValueManager();
             commandManager = new CommandManager();
+
             logger.info("初始化成功");
         } catch (Exception e) {
             logger.error("初始化发生错误");
@@ -59,6 +67,31 @@ public class Client implements Wrapper {
         long durationMs = endTime - initTime;
         double durationSec = durationMs / 1000.0;
         logger.info("客户端初始化耗时: {} ms ({} s)", durationMs, durationSec);
+    }
+
+    private static void initDiscordRPC() {
+        DiscordEventHandlers handlers = new DiscordEventHandlers.Builder().build();
+        DiscordRPC.discordInitialize("1376802803049173012", handlers, true);
+
+        DiscordRichPresence presence = new DiscordRichPresence.Builder("Playing Minecraft")
+                .setDetails("Betterfps")
+                .setStartTimestamps(System.currentTimeMillis() / 1000)
+                .build();
+
+        DiscordRPC.discordUpdatePresence(presence);
+
+        discordRpcThread = new Thread(() -> {
+            while (!Thread.currentThread().isInterrupted()) {
+                DiscordRPC.discordRunCallbacks();
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        });
+
+        Runtime.getRuntime().addShutdownHook(discordRpcThread);
     }
 
     public static String getDisplayName() {
