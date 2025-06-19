@@ -17,12 +17,12 @@ import java.util.List;
 @Getter
 @Setter
 public class Module implements Wrapper {
-    private final String name;
-    private final Category category;
+    protected final String name;
+    protected final Category category;
     protected boolean enabled;
-    private final List<Value<?>> values = new ArrayList<>();
-    private boolean canDisplay;
-    private int keyCode;
+    protected final List<Value<?>> values = new ArrayList<>();
+    protected boolean canDisplay;
+    protected int keyCode;
 
     public Module(Category category) {
         this.name = this.getClass().getSimpleName();
