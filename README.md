@@ -1,4 +1,4 @@
 # FPSBoost V3
-## have Opt-fine
+## have Optfine
 
 ![run.png](run.png)
