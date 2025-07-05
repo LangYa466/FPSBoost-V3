@@ -27,11 +27,22 @@ import net.optifine.CustomColors;
 import net.optifine.render.GlBlendState;
 import net.optifine.util.FontUtils;
 import org.apache.commons.io.IOUtils;
-import org.lwjgl.opengl.GL11;
 
 public class FontRenderer implements IResourceManagerReloadListener
 {
     private static final ResourceLocation[] unicodePageLocations = new ResourceLocation[256];
+    // 缓存字符映射表字符串，避免重复创建
+    private static final String CP1252_CHAR_MAP = "\u00c0\u00c1\u00c2\u00c8\u00ca\u00cb\u00cd\u00d3\u00d4\u00d5\u00da\u00df\u00e3\u00f5\u011f\u0130\u0131\u0152\u0153\u015e\u015f\u0174\u0175\u017e\u0207\u0000\u0000\u0000\u0000\u0000\u0000\u0000 !\"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~\u0000\u00c7\u00fc\u00e9\u00e2\u00e4\u00e0\u00e5\u00e7\u00ea\u00eb\u00e8\u00ef\u00ee\u00ec\u00c4\u00c5\u00c9\u00e6\u00c6\u00f4\u00f6\u00f2\u00fb\u00f9\u00ff\u00d6\u00dc\u00f8\u00a3\u00d8\u00d7\u0192\u00e1\u00ed\u00f3\u00fa\u00f1\u00d1\u00aa\u00ba\u00bf\u00ae\u00ac\u00bd\u00bc\u00a1\u00ab\u00bb\u2591\u2592\u2593\u2502\u2524\u2561\u2562\u2556\u2555\u2563\u2551\u2557\u255d\u255c\u255b\u2510\u2514\u2534\u252c\u251c\u2500\u253c\u255e\u255f\u255a\u2554\u2569\u2566\u2560\u2550\u256c\u2567\u2568\u2564\u2565\u2559\u2558\u2552\u2553\u256b\u256a\u2518\u250c\u2588\u2584\u258c\u2590\u2580\u03b1\u03b2\u0393\u03c0\u03a3\u03c3\u03bc\u03c4\u03a6\u0398\u03a9\u03b4\u221e\u2205\u2208\u2229\u2261\u00b1\u2265\u2264\u2320\u2321\u00f7\u2248\u00b0\u2219\u00b7\u221a\u207f\u00b2\u25a0\u0000";
+    // 使用快速查找数组代替 String.indexOf()，极大提升字符索引查找效率
+    private static final int[] glyphIndex = new int[65536];
+    static {
+        Arrays.fill(glyphIndex, -1);
+        for (int i = 0; i < CP1252_CHAR_MAP.length(); ++i) {
+            char c = CP1252_CHAR_MAP.charAt(i);
+            glyphIndex[c] = i;
+        }
+    }
+
     private final int[] charWidth = new int[256];
     public int FONT_HEIGHT = 9;
     public Random fontRandom = new Random();
@@ -230,7 +241,8 @@ public class FontRenderer implements IResourceManagerReloadListener
     {
         if (ch != 32 && ch != 160)
         {
-            int i = "\u00c0\u00c1\u00c2\u00c8\u00ca\u00cb\u00cd\u00d3\u00d4\u00d5\u00da\u00df\u00e3\u00f5\u011f\u0130\u0131\u0152\u0153\u015e\u015f\u0174\u0175\u017e\u0207\u0000\u0000\u0000\u0000\u0000\u0000\u0000 !\"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~\u0000\u00c7\u00fc\u00e9\u00e2\u00e4\u00e0\u00e5\u00e7\u00ea\u00eb\u00e8\u00ef\u00ee\u00ec\u00c4\u00c5\u00c9\u00e6\u00c6\u00f4\u00f6\u00f2\u00fb\u00f9\u00ff\u00d6\u00dc\u00f8\u00a3\u00d8\u00d7\u0192\u00e1\u00ed\u00f3\u00fa\u00f1\u00d1\u00aa\u00ba\u00bf\u00ae\u00ac\u00bd\u00bc\u00a1\u00ab\u00bb\u2591\u2592\u2593\u2502\u2524\u2561\u2562\u2556\u2555\u2563\u2551\u2557\u255d\u255c\u255b\u2510\u2514\u2534\u252c\u251c\u2500\u253c\u255e\u255f\u255a\u2554\u2569\u2566\u2560\u2550\u256c\u2567\u2568\u2564\u2565\u2559\u2558\u2552\u2553\u256b\u256a\u2518\u250c\u2588\u2584\u258c\u2590\u2580\u03b1\u03b2\u0393\u03c0\u03a3\u03c3\u03bc\u03c4\u03a6\u0398\u03a9\u03b4\u221e\u2205\u2208\u2229\u2261\u00b1\u2265\u2264\u2320\u2321\u00f7\u2248\u00b0\u2219\u00b7\u221a\u207f\u00b2\u25a0\u0000".indexOf(ch);
+            // 使用预计算的数组进行O(1)查找
+            int i = glyphIndex[ch];
             return i != -1 && !this.unicodeFlag ? this.renderDefaultChar(i, italic) : this.renderUnicodeChar(ch, italic);
         }
         else
@@ -243,20 +255,27 @@ public class FontRenderer implements IResourceManagerReloadListener
     {
         int i = ch % 16 * 8;
         int j = ch / 16 * 8;
-        int k = italic ? 1 : 0;
+        float k = italic ? 1.0F : 0.0F;
         this.bindTexture(this.locationFontTexture);
         float f = this.charWidthFloat[ch];
         float f1 = 7.99F;
-        GL11.glBegin(GL11.GL_TRIANGLE_STRIP);
-        GL11.glTexCoord2f((float)i / 128.0F, (float)j / 128.0F);
-        GL11.glVertex3f(this.posX + (float)k, this.posY, 0.0F);
-        GL11.glTexCoord2f((float)i / 128.0F, ((float)j + 7.99F) / 128.0F);
-        GL11.glVertex3f(this.posX - (float)k, this.posY + 7.99F, 0.0F);
-        GL11.glTexCoord2f(((float)i + f1 - 1.0F) / 128.0F, (float)j / 128.0F);
-        GL11.glVertex3f(this.posX + f1 - 1.0F + (float)k, this.posY, 0.0F);
-        GL11.glTexCoord2f(((float)i + f1 - 1.0F) / 128.0F, ((float)j + 7.99F) / 128.0F);
-        GL11.glVertex3f(this.posX + f1 - 1.0F - (float)k, this.posY + 7.99F, 0.0F);
-        GL11.glEnd();
+
+        float u1 = (float)i / 128.0F;
+        float v1 = (float)j / 128.0F;
+        float u2 = ((float)i + f1 - 1.0F) / 128.0F;
+        float v2 = ((float)j + f1) / 128.0F;
+
+        Tessellator tessellator = Tessellator.getInstance();
+        WorldRenderer worldrenderer = tessellator.getWorldRenderer();
+
+        // 使用 Tessellator/WorldRenderer 替代旧的 immediate mode (GL11)
+        worldrenderer.begin(5, DefaultVertexFormats.POSITION_TEX); // 5 for GL_TRIANGLE_STRIP
+        worldrenderer.pos(this.posX + k, this.posY, 0.0D).tex(u1, v1).endVertex();
+        worldrenderer.pos(this.posX - k, this.posY + f1, 0.0D).tex(u1, v2).endVertex();
+        worldrenderer.pos(this.posX + f1 / 2.0F + k, this.posY, 0.0D).tex(u2, v1).endVertex();
+        worldrenderer.pos(this.posX + f1 / 2.0F - k, this.posY + f1, 0.0D).tex(u2, v2).endVertex();
+        tessellator.draw();
+
         return f;
     }
 
@@ -264,7 +283,7 @@ public class FontRenderer implements IResourceManagerReloadListener
     {
         if (unicodePageLocations[page] == null)
         {
-            unicodePageLocations[page] = new ResourceLocation(String.format("textures/font/unicode_page_%02x.png", new Object[] {Integer.valueOf(page)}));
+            unicodePageLocations[page] = new ResourceLocation(String.format("textures/font/unicode_page_%02x.png", page));
             unicodePageLocations[page] = FontUtils.getHdFontLocation(unicodePageLocations[page]);
         }
 
@@ -294,16 +313,24 @@ public class FontRenderer implements IResourceManagerReloadListener
             float f3 = (float)((ch & 255) / 16 * 16);
             float f4 = f1 - f - 0.02F;
             float f5 = italic ? 1.0F : 0.0F;
-            GL11.glBegin(GL11.GL_TRIANGLE_STRIP);
-            GL11.glTexCoord2f(f2 / 256.0F, f3 / 256.0F);
-            GL11.glVertex3f(this.posX + f5, this.posY, 0.0F);
-            GL11.glTexCoord2f(f2 / 256.0F, (f3 + 15.98F) / 256.0F);
-            GL11.glVertex3f(this.posX - f5, this.posY + 7.99F, 0.0F);
-            GL11.glTexCoord2f((f2 + f4) / 256.0F, f3 / 256.0F);
-            GL11.glVertex3f(this.posX + f4 / 2.0F + f5, this.posY, 0.0F);
-            GL11.glTexCoord2f((f2 + f4) / 256.0F, (f3 + 15.98F) / 256.0F);
-            GL11.glVertex3f(this.posX + f4 / 2.0F - f5, this.posY + 7.99F, 0.0F);
-            GL11.glEnd();
+
+            float u1 = f2 / 256.0F;
+            float v1 = f3 / 256.0F;
+            float u2 = (f2 + f4) / 256.0F;
+            float v2 = (f3 + 15.98F) / 256.0F;
+            float charHeight = 7.99F;
+
+            Tessellator tessellator = Tessellator.getInstance();
+            WorldRenderer worldrenderer = tessellator.getWorldRenderer();
+
+            // 使用 Tessellator/WorldRenderer 替代旧的 immediate mode (GL11)
+            worldrenderer.begin(5, DefaultVertexFormats.POSITION_TEX); // 5 for GL_TRIANGLE_STRIP
+            worldrenderer.pos(this.posX + f5, this.posY, 0.0D).tex(u1, v1).endVertex();
+            worldrenderer.pos(this.posX - f5, this.posY + charHeight, 0.0D).tex(u1, v2).endVertex();
+            worldrenderer.pos(this.posX + f4 / 2.0F + f5, this.posY, 0.0D).tex(u2, v1).endVertex();
+            worldrenderer.pos(this.posX + f4 / 2.0F - f5, this.posY + charHeight, 0.0D).tex(u2, v2).endVertex();
+            tessellator.draw();
+
             return (f1 - f) / 2.0F + 1.0F;
         }
     }
@@ -381,7 +408,8 @@ public class FontRenderer implements IResourceManagerReloadListener
 
             if (c0 == 167 && i + 1 < text.length())
             {
-                int l = "0123456789abcdefklmnor".indexOf(text.toLowerCase(Locale.ENGLISH).charAt(i + 1));
+                // 避免在循环中创建新的字符串对象
+                int l = "0123456789abcdefklmnor".indexOf(Character.toLowerCase(text.charAt(i + 1)));
 
                 if (l < 16)
                 {
@@ -445,7 +473,8 @@ public class FontRenderer implements IResourceManagerReloadListener
             }
             else
             {
-                int j = "\u00c0\u00c1\u00c2\u00c8\u00ca\u00cb\u00cd\u00d3\u00d4\u00d5\u00da\u00df\u00e3\u00f5\u011f\u0130\u0131\u0152\u0153\u015e\u015f\u0174\u0175\u017e\u0207\u0000\u0000\u0000\u0000\u0000\u0000\u0000 !\"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~\u0000\u00c7\u00fc\u00e9\u00e2\u00e4\u00e0\u00e5\u00e7\u00ea\u00eb\u00e8\u00ef\u00ee\u00ec\u00c4\u00c5\u00c9\u00e6\u00c6\u00f4\u00f6\u00f2\u00fb\u00f9\u00ff\u00d6\u00dc\u00f8\u00a3\u00d8\u00d7\u0192\u00e1\u00ed\u00f3\u00fa\u00f1\u00d1\u00aa\u00ba\u00bf\u00ae\u00ac\u00bd\u00bc\u00a1\u00ab\u00bb\u2591\u2592\u2593\u2502\u2524\u2561\u2562\u2556\u2555\u2563\u2551\u2557\u255d\u255c\u255b\u2510\u2514\u2534\u252c\u251c\u2500\u253c\u255e\u255f\u255a\u2554\u2569\u2566\u2560\u2550\u256c\u2567\u2568\u2564\u2565\u2559\u2558\u2552\u2553\u256b\u256a\u2518\u250c\u2588\u2584\u258c\u2590\u2580\u03b1\u03b2\u0393\u03c0\u03a3\u03c3\u03bc\u03c4\u03a6\u0398\u03a9\u03b4\u221e\u2205\u2208\u2229\u2261\u00b1\u2265\u2264\u2320\u2321\u00f7\u2248\u00b0\u2219\u00b7\u221a\u207f\u00b2\u25a0\u0000".indexOf(c0);
+                // 使用预计算的数组进行O(1)查找
+                int j = glyphIndex[c0];
 
                 if (this.randomStyle && j != -1)
                 {
@@ -454,8 +483,8 @@ public class FontRenderer implements IResourceManagerReloadListener
 
                     while (true)
                     {
-                        j = this.fontRandom.nextInt("\u00c0\u00c1\u00c2\u00c8\u00ca\u00cb\u00cd\u00d3\u00d4\u00d5\u00da\u00df\u00e3\u00f5\u011f\u0130\u0131\u0152\u0153\u015e\u015f\u0174\u0175\u017e\u0207\u0000\u0000\u0000\u0000\u0000\u0000\u0000 !\"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~\u0000\u00c7\u00fc\u00e9\u00e2\u00e4\u00e0\u00e5\u00e7\u00ea\u00eb\u00e8\u00ef\u00ee\u00ec\u00c4\u00c5\u00c9\u00e6\u00c6\u00f4\u00f6\u00f2\u00fb\u00f9\u00ff\u00d6\u00dc\u00f8\u00a3\u00d8\u00d7\u0192\u00e1\u00ed\u00f3\u00fa\u00f1\u00d1\u00aa\u00ba\u00bf\u00ae\u00ac\u00bd\u00bc\u00a1\u00ab\u00bb\u2591\u2592\u2593\u2502\u2524\u2561\u2562\u2556\u2555\u2563\u2551\u2557\u255d\u255c\u255b\u2510\u2514\u2534\u252c\u251c\u2500\u253c\u255e\u255f\u255a\u2554\u2569\u2566\u2560\u2550\u256c\u2567\u2568\u2564\u2565\u2559\u2558\u2552\u2553\u256b\u256a\u2518\u250c\u2588\u2584\u258c\u2590\u2580\u03b1\u03b2\u0393\u03c0\u03a3\u03c3\u03bc\u03c4\u03a6\u0398\u03a9\u03b4\u221e\u2205\u2208\u2229\u2261\u00b1\u2265\u2264\u2320\u2321\u00f7\u2248\u00b0\u2219\u00b7\u221a\u207f\u00b2\u25a0\u0000".length());
-                        c1 = "\u00c0\u00c1\u00c2\u00c8\u00ca\u00cb\u00cd\u00d3\u00d4\u00d5\u00da\u00df\u00e3\u00f5\u011f\u0130\u0131\u0152\u0153\u015e\u015f\u0174\u0175\u017e\u0207\u0000\u0000\u0000\u0000\u0000\u0000\u0000 !\"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~\u0000\u00c7\u00fc\u00e9\u00e2\u00e4\u00e0\u00e5\u00e7\u00ea\u00eb\u00e8\u00ef\u00ee\u00ec\u00c4\u00c5\u00c9\u00e6\u00c6\u00f4\u00f6\u00f2\u00fb\u00f9\u00ff\u00d6\u00dc\u00f8\u00a3\u00d8\u00d7\u0192\u00e1\u00ed\u00f3\u00fa\u00f1\u00d1\u00aa\u00ba\u00bf\u00ae\u00ac\u00bd\u00bc\u00a1\u00ab\u00bb\u2591\u2592\u2593\u2502\u2524\u2561\u2562\u2556\u2555\u2563\u2551\u2557\u255d\u255c\u255b\u2510\u2514\u2534\u252c\u251c\u2500\u253c\u255e\u255f\u255a\u2554\u2569\u2566\u2560\u2550\u256c\u2567\u2568\u2564\u2565\u2559\u2558\u2552\u2553\u256b\u256a\u2518\u250c\u2588\u2584\u258c\u2590\u2580\u03b1\u03b2\u0393\u03c0\u03a3\u03c3\u03bc\u03c4\u03a6\u0398\u03a9\u03b4\u221e\u2205\u2208\u2229\u2261\u00b1\u2265\u2264\u2320\u2321\u00f7\u2248\u00b0\u2219\u00b7\u221a\u207f\u00b2\u25a0\u0000".charAt(j);
+                        j = this.fontRandom.nextInt(CP1252_CHAR_MAP.length());
+                        c1 = CP1252_CHAR_MAP.charAt(j);
 
                         if (k == this.getCharWidth(c1))
                         {
@@ -555,6 +584,8 @@ public class FontRenderer implements IResourceManagerReloadListener
         return this.renderString(text, (float)x, (float)y, color, dropShadow);
     }
 
+
+
     private int renderString(String text, float x, float y, int color, boolean dropShadow)
     {
         if (text == null)
@@ -651,7 +682,8 @@ public class FontRenderer implements IResourceManagerReloadListener
         }
         else if (p_getCharWidthFloat_1_ != 32 && p_getCharWidthFloat_1_ != 160)
         {
-            int i = "\u00c0\u00c1\u00c2\u00c8\u00ca\u00cb\u00cd\u00d3\u00d4\u00d5\u00da\u00df\u00e3\u00f5\u011f\u0130\u0131\u0152\u0153\u015e\u015f\u0174\u0175\u017e\u0207\u0000\u0000\u0000\u0000\u0000\u0000\u0000 !\"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~\u0000\u00c7\u00fc\u00e9\u00e2\u00e4\u00e0\u00e5\u00e7\u00ea\u00eb\u00e8\u00ef\u00ee\u00ec\u00c4\u00c5\u00c9\u00e6\u00c6\u00f4\u00f6\u00f2\u00fb\u00f9\u00ff\u00d6\u00dc\u00f8\u00a3\u00d8\u00d7\u0192\u00e1\u00ed\u00f3\u00fa\u00f1\u00d1\u00aa\u00ba\u00bf\u00ae\u00ac\u00bd\u00bc\u00a1\u00ab\u00bb\u2591\u2592\u2593\u2502\u2524\u2561\u2562\u2556\u2555\u2563\u2551\u2557\u255d\u255c\u255b\u2510\u2514\u2534\u252c\u251c\u2500\u253c\u255e\u255f\u255a\u2554\u2569\u2566\u2560\u2550\u256c\u2567\u2568\u2564\u2565\u2559\u2558\u2552\u2553\u256b\u256a\u2518\u250c\u2588\u2584\u258c\u2590\u2580\u03b1\u03b2\u0393\u03c0\u03a3\u03c3\u03bc\u03c4\u03a6\u0398\u03a9\u03b4\u221e\u2205\u2208\u2229\u2261\u00b1\u2265\u2264\u2320\u2321\u00f7\u2248\u00b0\u2219\u00b7\u221a\u207f\u00b2\u25a0\u0000".indexOf(p_getCharWidthFloat_1_);
+            // 使用预计算的数组进行O(1)查找
+            int i = glyphIndex[p_getCharWidthFloat_1_];
 
             if (p_getCharWidthFloat_1_ > 0 && i != -1 && !this.unicodeFlag)
             {
@@ -916,7 +948,8 @@ public class FontRenderer implements IResourceManagerReloadListener
 
     public static String getFormatFromString(String text)
     {
-        String s = "";
+        // 使用 StringBuilder 提高字符串拼接效率
+        StringBuilder builder = new StringBuilder();
         int i = -1;
         int j = text.length();
 
@@ -928,16 +961,17 @@ public class FontRenderer implements IResourceManagerReloadListener
 
                 if (isFormatColor(c0))
                 {
-                    s = "\u00a7" + c0;
+                    builder.setLength(0);
+                    builder.append('\u00a7').append(c0);
                 }
                 else if (isFormatSpecial(c0))
                 {
-                    s = s + "\u00a7" + c0;
+                    builder.append('\u00a7').append(c0);
                 }
             }
         }
 
-        return s;
+        return builder.toString();
     }
 
     public boolean getBidiFlag()

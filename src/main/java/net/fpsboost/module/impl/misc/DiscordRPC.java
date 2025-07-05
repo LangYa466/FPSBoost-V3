@@ -15,6 +15,7 @@ public class DiscordRPC extends Module {
 
     @Override
     public void onEnable() {
+        if (Client.discordRpcThread.isAlive()) return;
         Client.discordRpcThread.start();
         super.onEnable();
     }
