@@ -170,6 +170,11 @@ public class EntityRenderer implements IResourceManagerReloadListener
     private ShaderGroup[] fxaaShaders = new ShaderGroup[10];
     private boolean loadVisibleChunks = false;
 
+    // 复用可变BlockPos以减少内存分配
+    private final BlockPos.MutableBlockPos reusableBlockPos = new BlockPos.MutableBlockPos();
+    // 使用静态谓词避免重复实例化
+    private static final Predicate<Entity> PREDICATE_CAN_BE_COLLIDED_WITH = (p_apply_1_) -> p_apply_1_ != null && p_apply_1_.canBeCollidedWith();
+
     public EntityRenderer(Minecraft mcIn, IResourceManager resourceManagerIn)
     {
         this.shaderIndex = shaderCount;
@@ -353,7 +358,8 @@ public class EntityRenderer implements IResourceManagerReloadListener
         double d2 = entity.posX;
         double d0 = entity.posY + (double)entity.getEyeHeight();
         double d1 = entity.posZ;
-        float f2 = this.mc.theWorld.getLightBrightness(new BlockPos(d2, d0, d1));
+        // 使用可变BlockPos以避免分配
+        float f2 = this.mc.theWorld.getLightBrightness(this.reusableBlockPos.set(MathHelper.floor_double(d2), MathHelper.floor_double(d0), MathHelper.floor_double(d1)));
         float f3 = (float)this.mc.gameSettings.renderDistanceChunks / 16.0F;
         f3 = MathHelper.clamp_float(f3, 0.0F, 1.0F);
         float f4 = f2 * (1.0F - f3) + f3;
@@ -433,54 +439,38 @@ public class EntityRenderer implements IResourceManagerReloadListener
             this.pointedEntity = null;
             Vec3 vec33 = null;
             float f = 1.0F;
-            List<Entity> list = this.mc.theWorld.getEntitiesInAABBexcluding(entity, entity.getEntityBoundingBox().addCoord(vec31.xCoord * d0, vec31.yCoord * d0, vec31.zCoord * d0).expand((double)f, (double)f, (double)f), Predicates.and(EntitySelectors.NOT_SPECTATING, new Predicate<Entity>()
-            {
-                public boolean apply(Entity p_apply_1_)
-                {
-                    return p_apply_1_.canBeCollidedWith();
-                }
-            }));
+            // 使用静态谓词避免分配
+            List<Entity> list = this.mc.theWorld.getEntitiesInAABBexcluding(entity, entity.getEntityBoundingBox().addCoord(vec31.xCoord * d0, vec31.yCoord * d0, vec31.zCoord * d0).expand((double)f, (double)f, (double)f), Predicates.and(EntitySelectors.NOT_SPECTATING, PREDICATE_CAN_BE_COLLIDED_WITH));
             double d2 = d1;
 
-            for (int j = 0; j < list.size(); ++j)
-            {
-                Entity entity1 = (Entity)list.get(j);
+            for (Entity value : list) {
+                Entity entity1 = (Entity) value;
                 float f1 = entity1.getCollisionBorderSize();
-                AxisAlignedBB axisalignedbb = entity1.getEntityBoundingBox().expand((double)f1, (double)f1, (double)f1);
+                AxisAlignedBB axisalignedbb = entity1.getEntityBoundingBox().expand((double) f1, (double) f1, (double) f1);
                 MovingObjectPosition movingobjectposition = axisalignedbb.calculateIntercept(vec3, vec32);
 
-                if (axisalignedbb.isVecInside(vec3))
-                {
-                    if (d2 >= 0.0D)
-                    {
+                if (axisalignedbb.isVecInside(vec3)) {
+                    if (d2 >= 0.0D) {
                         this.pointedEntity = entity1;
                         vec33 = movingobjectposition == null ? vec3 : movingobjectposition.hitVec;
                         d2 = 0.0D;
                     }
-                }
-                else if (movingobjectposition != null)
-                {
+                } else if (movingobjectposition != null) {
                     double d3 = vec3.distanceTo(movingobjectposition.hitVec);
 
-                    if (d3 < d2 || d2 == 0.0D)
-                    {
+                    if (d3 < d2 || d2 == 0.0D) {
                         boolean flag1 = false;
 
-                        if (Reflector.ForgeEntity_canRiderInteract.exists())
-                        {
+                        if (Reflector.ForgeEntity_canRiderInteract.exists()) {
                             flag1 = Reflector.callBoolean(entity1, Reflector.ForgeEntity_canRiderInteract, new Object[0]);
                         }
 
-                        if (!flag1 && entity1 == entity.ridingEntity)
-                        {
-                            if (d2 == 0.0D)
-                            {
+                        if (!flag1 && entity1 == entity.ridingEntity) {
+                            if (d2 == 0.0D) {
                                 this.pointedEntity = entity1;
                                 vec33 = movingobjectposition.hitVec;
                             }
-                        }
-                        else
-                        {
+                        } else {
                             this.pointedEntity = entity1;
                             vec33 = movingobjectposition.hitVec;
                             d2 = d3;
@@ -661,13 +651,14 @@ public class EntityRenderer implements IResourceManagerReloadListener
 
             if (!this.mc.gameSettings.debugCamEnable)
             {
-                BlockPos blockpos = new BlockPos(entity);
-                IBlockState iblockstate = this.mc.theWorld.getBlockState(blockpos);
+                // 使用可变BlockPos以避免分配
+                this.reusableBlockPos.set(MathHelper.floor_double(entity.posX), MathHelper.floor_double(entity.posY), MathHelper.floor_double(entity.posZ));
+                IBlockState iblockstate = this.mc.theWorld.getBlockState(this.reusableBlockPos);
                 Block block = iblockstate.getBlock();
 
                 if (Reflector.ForgeHooksClient_orientBedCamera.exists())
                 {
-                    Reflector.callVoid(Reflector.ForgeHooksClient_orientBedCamera, new Object[] {this.mc.theWorld, blockpos, iblockstate, entity});
+                    Reflector.callVoid(Reflector.ForgeHooksClient_orientBedCamera, new Object[] {this.mc.theWorld, this.reusableBlockPos, iblockstate, entity});
                 }
                 else if (block == Blocks.bed)
                 {
@@ -1896,7 +1887,12 @@ public class EntityRenderer implements IResourceManagerReloadListener
 
             for (int l = 0; l < k; ++l)
             {
-                BlockPos blockpos1 = world.getPrecipitationHeight(blockpos.add(this.random.nextInt(i) - this.random.nextInt(i), 0, this.random.nextInt(i) - this.random.nextInt(i)));
+                // 使用可变BlockPos以避免分配
+                int xOff = this.random.nextInt(i) - this.random.nextInt(i);
+                int zOff = this.random.nextInt(i) - this.random.nextInt(i);
+                this.reusableBlockPos.set(blockpos.getX() + xOff, blockpos.getY(), blockpos.getZ() + zOff);
+                BlockPos blockpos1 = world.getPrecipitationHeight(this.reusableBlockPos);
+
                 BiomeGenBase biomegenbase = world.getBiomeGenForCoords(blockpos1);
                 BlockPos blockpos2 = blockpos1.down();
                 Block block = world.getBlockState(blockpos2).getBlock();

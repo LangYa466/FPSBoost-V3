@@ -78,6 +78,15 @@ public class GuiIngame extends Gui
     private long lastSystemTime = 0L;
     private long healthUpdateCounter = 0L;
 
+    // Predicate被设为静态常量, 避免在每帧渲染时重复创建对象
+    private static final Predicate<Score> SCORE_PLAYER_FILTER = new Predicate<Score>()
+    {
+        public boolean apply(Score p_apply_1_)
+        {
+            return p_apply_1_.getPlayerName() != null && !p_apply_1_.getPlayerName().startsWith("#");
+        }
+    };
+
     public GuiIngame(Minecraft mcIn)
     {
         this.mc = mcIn;
@@ -534,56 +543,58 @@ public class GuiIngame extends Gui
     {
         Scoreboard scoreboard = objective.getScoreboard();
         Collection<Score> collection = scoreboard.getSortedScores(objective);
-        List<Score> list = Lists.newArrayList(Iterables.filter(collection, new Predicate<Score>()
-        {
-            public boolean apply(Score p_apply_1_)
-            {
-                return p_apply_1_.getPlayerName() != null && !p_apply_1_.getPlayerName().startsWith("#");
-            }
-        }));
+        // 使用静态predicate过滤, 避免在每帧都创建新Predicate对象
+        List<Score> list = Lists.newArrayList(Iterables.filter(collection, SCORE_PLAYER_FILTER));
+        Collection<Score> scoresToRender;
 
         if (list.size() > 15)
         {
-            collection = Lists.newArrayList(Iterables.skip(list, collection.size() - 15));
+            // 从已过滤的列表(list)中获取末尾15个, 而非原始列表(collection)
+            scoresToRender = Lists.newArrayList(Iterables.skip(list, list.size() - 15));
         }
         else
         {
-            collection = list;
+            scoresToRender = list;
         }
 
-        int i = this.getFontRenderer().getStringWidth(objective.getDisplayName());
+        // 缓存字体渲染器和其高度, 以便在循环中快速访问
+        FontRenderer fontRenderer = this.getFontRenderer();
+        int fontHeight = fontRenderer.FONT_HEIGHT;
+        int i = fontRenderer.getStringWidth(objective.getDisplayName());
 
-        for (Score score : collection)
+        for (Score score : scoresToRender)
         {
             ScorePlayerTeam scoreplayerteam = scoreboard.getPlayersTeam(score.getPlayerName());
             String s = ScorePlayerTeam.formatPlayerName(scoreplayerteam, score.getPlayerName()) + ": " + EnumChatFormatting.RED + score.getScorePoints();
-            i = Math.max(i, this.getFontRenderer().getStringWidth(s));
+            i = Math.max(i, fontRenderer.getStringWidth(s));
         }
 
-        int i1 = collection.size() * this.getFontRenderer().FONT_HEIGHT;
+        int i1 = scoresToRender.size() * fontHeight;
         int j1 = scaledRes.getScaledHeight() / 2 + i1 / 3;
         int k1 = 3;
-        int l1 = scaledRes.getScaledWidth() - i - k1;
+        // 缓存屏幕宽度以提高性能和代码清晰度
+        int scaledWidth = scaledRes.getScaledWidth();
+        int l1 = scaledWidth - i - k1;
         int j = 0;
 
-        for (Score score1 : collection)
+        for (Score score1 : scoresToRender)
         {
             ++j;
             ScorePlayerTeam scoreplayerteam1 = scoreboard.getPlayersTeam(score1.getPlayerName());
             String s1 = ScorePlayerTeam.formatPlayerName(scoreplayerteam1, score1.getPlayerName());
             String s2 = EnumChatFormatting.RED + "" + score1.getScorePoints();
-            int k = j1 - j * this.getFontRenderer().FONT_HEIGHT;
-            int l = scaledRes.getScaledWidth() - k1 + 2;
-            drawRect(l1 - 2, k, l, k + this.getFontRenderer().FONT_HEIGHT, 1342177280);
-            this.getFontRenderer().drawString(s1, l1, k, 553648127);
-            this.getFontRenderer().drawString(s2, l - this.getFontRenderer().getStringWidth(s2), k, 553648127);
+            int k = j1 - j * fontHeight;
+            int l = scaledWidth - k1 + 2;
+            drawRect(l1 - 2, k, l, k + fontHeight, 1342177280);
+            fontRenderer.drawString(s1, l1, k, 553648127);
+            fontRenderer.drawString(s2, l - fontRenderer.getStringWidth(s2), k, 553648127);
 
-            if (j == collection.size())
+            if (j == scoresToRender.size())
             {
                 String s3 = objective.getDisplayName();
-                drawRect(l1 - 2, k - this.getFontRenderer().FONT_HEIGHT - 1, l, k - 1, 1610612736);
+                drawRect(l1 - 2, k - fontHeight - 1, l, k - 1, 1610612736);
                 drawRect(l1 - 2, k - 1, l, k, 1342177280);
-                this.getFontRenderer().drawString(s3, l1 + i / 2 - this.getFontRenderer().getStringWidth(s3) / 2, k - this.getFontRenderer().FONT_HEIGHT, 553648127);
+                fontRenderer.drawString(s3, l1 + i / 2 - fontRenderer.getStringWidth(s3) / 2, k - fontHeight, 553648127);
             }
         }
     }
