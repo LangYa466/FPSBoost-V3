@@ -38,6 +38,7 @@ import javax.imageio.ImageIO;
 
 import net.fpsboost.Client;
 import net.fpsboost.event.impl.KeyEvent;
+import net.fpsboost.event.impl.TickEvent;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.audio.MusicTicker;
@@ -547,7 +548,7 @@ public class Minecraft implements IThreadListener, IPlayerUsage
     private void createDisplay() throws LWJGLException
     {
         Display.setResizable(true);
-        Display.setTitle("Minecraft 1.8.9");
+        Display.setTitle(String.format("Minecraft 1.8.9 | %s%s", Client.name, Client.version));
 
         try
         {
@@ -1595,6 +1596,8 @@ public class Minecraft implements IThreadListener, IPlayerUsage
 
     public void runTick() throws IOException
     {
+        TickEvent tickEvent = new TickEvent();
+        Client.eventManager.call(tickEvent);
         if (this.rightClickDelayTimer > 0)
         {
             --this.rightClickDelayTimer;

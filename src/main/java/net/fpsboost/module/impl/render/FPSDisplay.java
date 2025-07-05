@@ -2,6 +2,7 @@ package net.fpsboost.module.impl.render;
 
 import net.fpsboost.event.EventTarget;
 import net.fpsboost.event.impl.Render2DEvent;
+import net.fpsboost.event.impl.TickEvent;
 import net.fpsboost.module.Category;
 import net.fpsboost.module.Module;
 import net.fpsboost.util.drag.Drag;
@@ -24,5 +25,10 @@ public class FPSDisplay extends Module implements FontUtil {
         drag.render(() -> {
             font18.drawStringWithShadow(Minecraft.getDebugFPS() + " FPS", 0, 0, -1);
         });
+    }
+    @EventTarget
+    public void onTick(TickEvent event) {
+        drag.setWidth(font18.getStringWidth(Minecraft.getDebugFPS() + " FPS"));
+        drag.setHeight(font18.getHeight());
     }
 }

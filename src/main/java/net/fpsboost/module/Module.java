@@ -29,6 +29,11 @@ public class Module implements Wrapper {
         this.category = category;
     }
 
+    public Module(String name, Category category) {
+        this.name = name;
+        this.category = category;
+    }
+
     public String getDisplayName() {
         return I18nManager.get(name);
     }

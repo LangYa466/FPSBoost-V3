@@ -360,10 +360,6 @@ public class CFontRenderer extends FontRenderer {
         return charActualHeight / 2;
     }
 
-    /**
-     * @deprecated Use {@link #getFontHeight()}
-     */
-    @Deprecated
     public int getHeight() {
         return getFontHeight();
     }
