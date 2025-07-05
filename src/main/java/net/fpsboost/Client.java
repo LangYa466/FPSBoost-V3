@@ -89,9 +89,17 @@ public class Client implements Wrapper {
                     Thread.currentThread().interrupt();
                 }
             }
+            DiscordRPC.discordShutdown(); // 确保关闭 RPC
         });
 
-        Runtime.getRuntime().addShutdownHook(discordRpcThread);
+        discordRpcThread.start();
+
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            discordRpcThread.interrupt();
+            try {
+                discordRpcThread.join();
+            } catch (InterruptedException e) { }
+        }));
     }
 
     public static String getDisplayName() {
