@@ -28,4 +28,16 @@ public class NumberValue extends Value<Number> {
         }
         super.setValue(value);
     }
+
+    public void increment() {
+        Number current = getValue();
+        Number newValue = current.doubleValue() + inc.doubleValue();
+        setValue(newValue);
+    }
+
+    public void decrement() {
+        Number current = getValue();
+        Number newValue = current.doubleValue() - inc.doubleValue();
+        setValue(newValue);
+    }
 }
