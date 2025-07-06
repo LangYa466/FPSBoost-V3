@@ -57,6 +57,7 @@ public class Client implements Wrapper {
             valueManager = new ValueManager();
             commandManager = new CommandManager();
 
+            loadAllConfigs();
             logger.info("初始化成功");
         } catch (Exception e) {
             logger.error("初始化发生错误");
@@ -95,15 +96,40 @@ public class Client implements Wrapper {
         discordRpcThread.start();
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            saveAllConfigs();
             discordRpcThread.interrupt();
             try {
                 discordRpcThread.join();
-            } catch (InterruptedException e) { }
+            } catch (InterruptedException ignored) { }
         }));
     }
 
     public static String getDisplayName() {
         if (isDev) return name + "-DevBuild";
         return name + version;
+    }
+
+    public static void saveAllConfigs() {
+        logger.info("保存所有配置...");
+        for (Manager manager : managers) {
+            try {
+                manager.save();
+            } catch (Exception e) {
+                logger.error("保存配置失败: {}", manager.getName(), e);
+            }
+        }
+        logger.info("所有配置保存完成");
+    }
+
+    public static void loadAllConfigs() {
+        logger.info("加载所有配置...");
+        for (Manager manager : managers) {
+            try {
+                manager.load();
+            } catch (Exception e) {
+                logger.error("加载配置失败: {}", manager.getName(), e);
+            }
+        }
+        logger.info("所有配置加载完成");
     }
 }

@@ -62,7 +62,7 @@ public class ModuleManager extends Manager {
     }
 
     @Override
-    protected void save() {
+    public void save() {
         try {
             JsonObject config = new JsonObject();
             
@@ -91,7 +91,7 @@ public class ModuleManager extends Manager {
     }
 
     @Override
-    protected void load() {
+    public void load() {
         if (!configFile.exists()) {
             logger.info("模块配置文件不存在，跳过加载");
             return;

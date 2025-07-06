@@ -40,7 +40,11 @@ public class Manager implements Wrapper {
 
     protected void init() {}
 
-    // 这里是config用的
-    protected void save() {}
-    protected void load() {}
+    public void save() {
+        logger.info("{} 保存配置", name);
+    }
+    
+    public void load() {
+        logger.info("{} 加载配置", name);
+    }
 }
