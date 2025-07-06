@@ -74,7 +74,7 @@ public class Client implements Wrapper {
         DiscordRPC.discordInitialize("1376802803049173012", handlers, true);
 
         DiscordRichPresence presence = new DiscordRichPresence.Builder("Playing Minecraft")
-                .setDetails("Betterfps")
+                .setDetails("Name: " + mc.getSession().getUsername())
                 .setStartTimestamps(System.currentTimeMillis() / 1000)
                 .build();
 
@@ -84,12 +84,12 @@ public class Client implements Wrapper {
             while (!Thread.currentThread().isInterrupted()) {
                 DiscordRPC.discordRunCallbacks();
                 try {
-                    Thread.sleep(2000);
+                    Thread.sleep(5000);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
             }
-            DiscordRPC.discordShutdown(); // 确保关闭 RPC
+            DiscordRPC.discordShutdown();
         });
 
         discordRpcThread.start();
