@@ -15,11 +15,26 @@ public class ToggleCommand extends Command {
 
     @Override
     public boolean run(String[] args) {
-        if (args.length != 2) return false;
-        Module module = Client.moduleManager.getModule(args[1]);
-        if (module == null) return false;
+        if (args.length != 2) {
+            logUsage();
+            return false;
+        }
+        
+        String moduleName = args[1];
+        Module module = Client.moduleManager.getModule(moduleName);
+        if (module == null) {
+            log("error", "模块不存在:", moduleName);
+            return false;
+        }
+        
         module.toggle();
         log("ok", module.getDisplayName(), module.isEnabled());
         return true;
+    }
+
+    @Override
+    public void logUsage() {
+        log("usage", "用法: #toggle <模块名>");
+        log("usage", "别名: #t <模块名>");
     }
 }

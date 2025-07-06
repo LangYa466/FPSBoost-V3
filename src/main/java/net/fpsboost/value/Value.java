@@ -2,6 +2,7 @@ package net.fpsboost.value;
 
 import lombok.Data;
 import net.fpsboost.Client;
+import net.fpsboost.manager.impl.I18nManager;
 
 import java.util.function.BooleanSupplier;
 
@@ -28,6 +29,6 @@ public class Value<T> {
     }
 
     public String getDisplayName() {
-        return Client.i18nManager.get(String.format("%s.%s", moduleName, name));
+        return I18nManager.get(String.format("%s.%s", moduleName, name.toLowerCase()));
     }
 }
