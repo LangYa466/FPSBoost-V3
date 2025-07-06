@@ -15,9 +15,12 @@ import net.fpsboost.module.impl.dev.TestClickGUI;
 import net.fpsboost.module.impl.dev.TestDragGUI;
 import net.fpsboost.module.impl.dev.TestValue;
 import net.fpsboost.module.impl.misc.DiscordRPC;
+import net.fpsboost.module.impl.misc.NameProtect;
 import net.fpsboost.module.impl.misc.Sprint;
 import net.fpsboost.module.impl.render.FPSDisplay;
 import net.fpsboost.module.impl.render.ModuleList;
+import net.fpsboost.module.impl.render.RenderMyNameTag;
+import net.fpsboost.socket.ClientIRC;
 import net.fpsboost.value.Value;
 
 import java.io.File;
@@ -48,10 +51,12 @@ public class ModuleManager extends Manager {
         // Misc
         addModule(new Sprint());
         addModule(new DiscordRPC());
+        addModule(new NameProtect());
 
         // Render
         addModule(new FPSDisplay());
         addModule(new ModuleList());
+        addModule(new RenderMyNameTag());
 
         // Dev
         addModule(new TestDragGUI());
@@ -60,6 +65,7 @@ public class ModuleManager extends Manager {
 
         // Client
         addModule(new ClientCommand());
+        addModule(new ClientIRC());
 
         Client.eventManager.register(this);
         super.init();

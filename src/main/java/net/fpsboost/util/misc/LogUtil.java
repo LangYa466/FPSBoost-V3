@@ -51,6 +51,10 @@ public class LogUtil {
         log("WARN", message, args);
     }
 
+    public void debug(String message, Object... args) {
+        if (Client.isDev) log("DEBUG", message, args);
+    }
+
     public void error(String message, Object... args) {
         log("ERROR", message, args);
     }

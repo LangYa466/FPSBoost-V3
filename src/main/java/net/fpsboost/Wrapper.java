@@ -28,4 +28,8 @@ public interface Wrapper {
         if (!Client.isDev) return;
         log("[Debug] " + message);
     }
+
+    static boolean isNull() {
+        return mc.thePlayer == null || mc.theWorld == null;
+    }
 }

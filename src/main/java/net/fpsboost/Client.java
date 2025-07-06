@@ -19,7 +19,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class Client implements Wrapper {
     public static final String name = "FPSBoost V3";
     public static final String version = ".01";
-    private static final LogUtil logger = new LogUtil();
+    public static final LogUtil logger = new LogUtil();
     public static List<Manager> managers = new CopyOnWriteArrayList<>();
     public static EventManager eventManager;
     public static ModuleManager moduleManager;
@@ -28,6 +28,7 @@ public class Client implements Wrapper {
     public static I18nManager i18nManager;
     public static CommandManager commandManager;
     public static File configDir;
+    public static final String web = "https://api.furry.luxe/";
 
     public static Thread discordRpcThread;
 

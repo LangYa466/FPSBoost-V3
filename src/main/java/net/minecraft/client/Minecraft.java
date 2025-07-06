@@ -38,7 +38,9 @@ import javax.imageio.ImageIO;
 
 import net.fpsboost.Client;
 import net.fpsboost.event.impl.KeyEvent;
+import net.fpsboost.event.impl.LoadWorldEvent;
 import net.fpsboost.event.impl.TickEvent;
+import net.fpsboost.util.misc.IconUtil;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.audio.MusicTicker;
@@ -591,33 +593,13 @@ public class Minecraft implements IThreadListener, IPlayerUsage
         }
     }
 
-    private void setWindowIcon()
-    {
+    private void setWindowIcon() {
         Util.EnumOS util$enumos = Util.getOSType();
 
-        if (util$enumos != Util.EnumOS.OSX)
-        {
-            InputStream inputstream = null;
-            InputStream inputstream1 = null;
-
-            try
-            {
-                inputstream = this.mcDefaultResourcePack.getInputStreamAssets(new ResourceLocation("icons/icon_16x16.png"));
-                inputstream1 = this.mcDefaultResourcePack.getInputStreamAssets(new ResourceLocation("icons/icon_32x32.png"));
-
-                if (inputstream != null && inputstream1 != null)
-                {
-                    Display.setIcon(new ByteBuffer[] {this.readImageToBuffer(inputstream), this.readImageToBuffer(inputstream1)});
-                }
-            }
-            catch (IOException ioexception)
-            {
-                logger.error((String)"Couldn\'t set icon", (Throwable)ioexception);
-            }
-            finally
-            {
-                IOUtils.closeQuietly(inputstream);
-                IOUtils.closeQuietly(inputstream1);
+        if (util$enumos != Util.EnumOS.OSX) {
+            final ByteBuffer[] clientFavicon = IconUtil.getFavicon();
+            if (clientFavicon != null) {
+                Display.setIcon(clientFavicon);
             }
         }
     }
@@ -2206,6 +2188,8 @@ public class Minecraft implements IThreadListener, IPlayerUsage
     {
         if (worldClientIn == null)
         {
+            LoadWorldEvent loadWorldEvent = new LoadWorldEvent(worldClientIn);
+            Client.eventManager.call(loadWorldEvent);
             NetHandlerPlayClient nethandlerplayclient = this.getNetHandler();
 
             if (nethandlerplayclient != null)

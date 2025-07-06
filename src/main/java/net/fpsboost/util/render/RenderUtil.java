@@ -1,6 +1,11 @@
 package net.fpsboost.util.render;
 
 import net.minecraft.client.gui.Gui;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.util.ResourceLocation;
+import org.lwjgl.opengl.GL11;
+
+import static net.fpsboost.Wrapper.mc;
 
 /**
  * @author LangYa466
@@ -21,5 +26,14 @@ public class RenderUtil {
 
         Gui.drawVerticalLine(x, y, y + height, color);
         Gui.drawVerticalLine(x + width, y, y + height, color);
+    }
+
+    public static void drawImage(ResourceLocation texture, float x, float y, int width, int height) {
+        GlStateManager.enableBlend();
+        GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        GlStateManager.color(1, 1, 1, 1); // 确保每次绘制时重置颜色
+        mc.getTextureManager().bindTexture(texture);
+        Gui.drawModalRectWithCustomSizedTexture(x, y, 0, 0, width, height, width, height);
+        GlStateManager.disableBlend();
     }
 }

@@ -228,17 +228,44 @@ public class Gui
         tessellator.draw();
     }
 
-    public static void drawScaledCustomSizeModalRect(int x, int y, float u, float v, int uWidth, int vHeight, int width, int height, float tileWidth, float tileHeight)
-    {
+
+    public static void drawModalRectWithCustomSizedTexture(float x, float y, float u, float v, float width, float height, float textureWidth, float textureHeight) {
+        float f = 1.0F / textureWidth;
+        float f1 = 1.0F / textureHeight;
+        Tessellator tessellator = Tessellator.getInstance();
+        WorldRenderer worldrenderer = tessellator.getWorldRenderer();
+
+        // 使用局部变量缓存 tex 坐标计算
+        float texU1 = u * f;
+        float texV1 = v * f1;
+        float texU2 = (u + width) * f;
+        float texV2 = (v + height) * f1;
+
+        worldrenderer.begin(7, DefaultVertexFormats.POSITION_TEX);
+        worldrenderer.pos(x, y + height, 0.0D).tex(texU1, texV2).endVertex();
+        worldrenderer.pos(x + width, y + height, 0.0D).tex(texU2, texV2).endVertex();
+        worldrenderer.pos(x + width, y, 0.0D).tex(texU2, texV1).endVertex();
+        worldrenderer.pos(x, y, 0.0D).tex(texU1, texV1).endVertex();
+        tessellator.draw();
+    }
+
+    public static void drawScaledCustomSizeModalRect(int x, int y, float u, float v, int uWidth, int vHeight, int width, int height, float tileWidth, float tileHeight) {
         float f = 1.0F / tileWidth;
         float f1 = 1.0F / tileHeight;
         Tessellator tessellator = Tessellator.getInstance();
         WorldRenderer worldrenderer = tessellator.getWorldRenderer();
+
+        // 使用局部变量缓存 tex 坐标计算
+        float texU1 = u * f;
+        float texV1 = v * f1;
+        float texU2 = (u + uWidth) * f;
+        float texV2 = (v + vHeight) * f1;
+
         worldrenderer.begin(7, DefaultVertexFormats.POSITION_TEX);
-        worldrenderer.pos((double)x, (double)(y + height), 0.0D).tex((double)(u * f), (double)((v + (float)vHeight) * f1)).endVertex();
-        worldrenderer.pos((double)(x + width), (double)(y + height), 0.0D).tex((double)((u + (float)uWidth) * f), (double)((v + (float)vHeight) * f1)).endVertex();
-        worldrenderer.pos((double)(x + width), (double)y, 0.0D).tex((double)((u + (float)uWidth) * f), (double)(v * f1)).endVertex();
-        worldrenderer.pos((double)x, (double)y, 0.0D).tex((double)(u * f), (double)(v * f1)).endVertex();
+        worldrenderer.pos(x, y + height, 0.0D).tex(texU1, texV2).endVertex();
+        worldrenderer.pos(x + width, y + height, 0.0D).tex(texU2, texV2).endVertex();
+        worldrenderer.pos(x + width, y, 0.0D).tex(texU2, texV1).endVertex();
+        worldrenderer.pos(x, y, 0.0D).tex(texU1, texV1).endVertex();
         tessellator.draw();
     }
 }

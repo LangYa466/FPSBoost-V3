@@ -3,6 +3,8 @@ package net.minecraft.client.renderer.entity;
 import com.google.common.collect.Lists;
 import java.nio.FloatBuffer;
 import java.util.List;
+
+import net.fpsboost.module.impl.render.RenderMyNameTag;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.FontRenderer;
@@ -692,6 +694,7 @@ public abstract class RendererLivingEntity<T extends EntityLivingBase> extends R
                 }
             }
         }
+        if (RenderMyNameTag.isEnable) return true;
 
         return Minecraft.isGuiEnabled() && entity != this.renderManager.livingPlayer && !entity.isInvisibleToPlayer(entityplayersp) && entity.riddenByEntity == null;
     }

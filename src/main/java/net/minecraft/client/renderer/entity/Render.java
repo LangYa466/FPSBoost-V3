@@ -1,5 +1,8 @@
 package net.minecraft.client.renderer.entity;
 
+import net.fpsboost.socket.ClientIRC;
+import net.fpsboost.util.misc.IconUtil;
+import net.fpsboost.util.render.RenderUtil;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
@@ -327,8 +330,10 @@ public abstract class Render<T extends Entity> implements IEntityRenderer
         return this.renderManager.getFontRenderer();
     }
 
-    protected void renderLivingLabel(T entityIn, String str, double x, double y, double z, int maxDistance)
-    {
+    protected void renderLivingLabel(T entityIn, String str, double x, double y, double z, int maxDistance) {
+        if (entityIn.getName() == null) return;
+        boolean isUser = (ClientIRC.isUser(entityIn.getName())) && str.contains(entityIn.getName());
+        if (isUser) str = "  " + str;
         double d0 = entityIn.getDistanceSqToEntity(this.renderManager.livingPlayer);
 
         if (d0 <= (double)(maxDistance * maxDistance))
@@ -369,6 +374,7 @@ public abstract class Render<T extends Entity> implements IEntityRenderer
             GlStateManager.enableDepth();
             GlStateManager.depthMask(true);
             fontrenderer.drawString(str, -fontrenderer.getStringWidth(str) / 2, i, -1);
+            if (isUser) RenderUtil.drawImage(IconUtil.icon, -fontrenderer.getStringWidth(str) / 2F, i, 7, 7);
             GlStateManager.enableLighting();
             GlStateManager.disableBlend();
             GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);

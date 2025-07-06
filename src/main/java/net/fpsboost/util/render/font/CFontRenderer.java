@@ -1,6 +1,7 @@
 package net.fpsboost.util.render.font;
 
 import lombok.Getter;
+import net.fpsboost.manager.impl.DrawTextHookManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.GlStateManager;
@@ -141,6 +142,9 @@ public class CFontRenderer extends FontRenderer {
             return 0;
         }
 
+        text = DrawTextHookManager.hookMethod(text).getDisplayText();
+
+
         // Apply transformations:
         // Original logic: y_orig = y_orig - 2; x_render = x_orig * 2; y_render = y_orig * 2; y_render = y_render - 2; then glScale(0.5)
         // Effective final screen Y: inputY - 3
@@ -279,7 +283,7 @@ public class CFontRenderer extends FontRenderer {
     public int getStringWidth(String text) {
         // EventText event = new EventText(text);
         // Client.instance.eventManager.call(event);
-        String finalText = text;
+        String finalText = DrawTextHookManager.hookMethod(text).getDisplayText();
 
         if (finalText == null || finalText.isEmpty()) {
             return 0;
