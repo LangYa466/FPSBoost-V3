@@ -26,13 +26,14 @@ public class ModuleList extends Module implements FontUtil {
             try {
                 int index = 0;
                 for (Module module : Client.moduleManager.getModules().values()) {
+                    if (!module.isCanDisplay()) continue;
                     if (module.isEnabled()) {
                         font18.drawStringWithShadow(module.getDisplayName(), 0, index * font18.FONT_HEIGHT, -1);
                         index++;
                     }
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                Client.logger.error(e);
             }
         });
     }
@@ -44,6 +45,7 @@ public class ModuleList extends Module implements FontUtil {
             int enabledCount = 0;
             
             for (Module module : Client.moduleManager.getModules().values()) {
+                if (!module.isCanDisplay()) continue;
                 if (module.isEnabled()) {
                     int moduleWidth = font18.getStringWidth(module.getDisplayName());
                     if (moduleWidth > maxWidth) {
@@ -56,7 +58,7 @@ public class ModuleList extends Module implements FontUtil {
             drag.setWidth(maxWidth);
             drag.setHeight(enabledCount * font18.getHeight());
         } catch (Exception e) {
-            e.printStackTrace();
+            Client.logger.error(e);
         }
     }
 }

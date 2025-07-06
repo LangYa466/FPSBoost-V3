@@ -286,6 +286,7 @@ public class ClickGUI extends GuiScreen {
         private List<Module> getModulesByCategory(Category category) {
             List<Module> modules = new ArrayList<>();
             for (Module module : Client.moduleManager.getModules().values()) {
+                if (!module.isCanDisplay()) continue;
                 if (module.getCategory() == category) {
                     modules.add(module);
                 }
