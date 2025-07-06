@@ -1,6 +1,6 @@
-sprint=Auto Sprint
-fpsdisplay=FPS Display
-modulelist=Module List
+Sprint=Auto Sprint
+FPSDisplay=FPS Display
+ModuleList=Module List
 unknowCommand=Unknown command
 toggle.ok=Toggled %s to %s
 toggle.usage=%s Module Name

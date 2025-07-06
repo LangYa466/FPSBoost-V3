@@ -64,6 +64,6 @@ public class I18nManager extends Manager {
 
     public static String get(String key) {
         if (key == null) return "NullKey";
-        return i18nMap.getOrDefault(key.toLowerCase(), key + " NoneI18n");
+        return i18nMap.getOrDefault(key.toLowerCase(), "NoneI18n");
     }
 }

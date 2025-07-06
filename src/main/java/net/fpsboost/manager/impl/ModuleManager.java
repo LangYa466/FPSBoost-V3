@@ -11,7 +11,9 @@ import net.fpsboost.event.impl.KeyEvent;
 import net.fpsboost.manager.Manager;
 import net.fpsboost.module.Module;
 import net.fpsboost.module.impl.client.ClientCommand;
+import net.fpsboost.module.impl.dev.TestClickGUI;
 import net.fpsboost.module.impl.dev.TestDragGUI;
+import net.fpsboost.module.impl.dev.TestValue;
 import net.fpsboost.module.impl.misc.DiscordRPC;
 import net.fpsboost.module.impl.misc.Sprint;
 import net.fpsboost.module.impl.render.FPSDisplay;
@@ -53,6 +55,8 @@ public class ModuleManager extends Manager {
 
         // Dev
         addModule(new TestDragGUI());
+        addModule(new TestClickGUI());
+        addModule(new TestValue());
 
         // Client
         addModule(new ClientCommand());

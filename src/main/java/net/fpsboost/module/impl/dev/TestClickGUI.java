@@ -2,6 +2,7 @@ package net.fpsboost.module.impl.dev;
 
 import net.fpsboost.module.Category;
 import net.fpsboost.module.Module;
+import net.fpsboost.screen.ClickGUI;
 import net.fpsboost.screen.GuiDrag;
 import org.lwjgl.input.Keyboard;
 
@@ -9,10 +10,10 @@ import org.lwjgl.input.Keyboard;
  * @author LangYa466
  * @date 2025/5/24
  */
-public class TestDragGUI extends Module {
-    public TestDragGUI() {
+public class TestClickGUI extends Module {
+    public TestClickGUI() {
         super(Category.DEV);
-        keyCode = Keyboard.KEY_P;
+        keyCode = Keyboard.KEY_RSHIFT;
     }
 
     @Override
@@ -23,7 +24,7 @@ public class TestDragGUI extends Module {
     @Override
     public void onDisable() {
         if (mc.thePlayer != null) {
-            mc.displayGuiScreen(new GuiDrag());
+            mc.displayGuiScreen(ClickGUI.INSTANCE);
         }
     }
 }

@@ -1,6 +1,6 @@
-sprint=自动疾跑
-fpsdisplay=帧数显示
-modulelist=模块列表
+Sprint=自动疾跑
+FPSDisplay=帧数显示
+ModuleList=模块列表
 unknowCommand=没有这个指令啊老铁
 toggle.ok=已将模块 %s 状态切换到 %s
 toggle.usage=%s 模块名称
