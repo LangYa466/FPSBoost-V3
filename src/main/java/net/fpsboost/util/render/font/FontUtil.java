@@ -13,7 +13,7 @@ public interface FontUtil {
     CFontRenderer font18 = getFont(18);
 
     static CFontRenderer getFont(int fontSize) {
-        try (InputStream inputStream = ResourceUtil.getResource("fonts/client.ttf")) {
+        try (InputStream inputStream = ResourceUtil.getResource("fonts/client.otf")) {
             assert inputStream != null;
              Font font = Font.createFont(Font.TRUETYPE_FONT, inputStream)
                     .deriveFont((float) fontSize);
