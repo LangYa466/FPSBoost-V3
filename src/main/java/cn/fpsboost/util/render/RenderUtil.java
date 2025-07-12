@@ -55,7 +55,7 @@ public class RenderUtil {
         GlStateManager.disableBlend();
     }
 
-    protected static void drawHorizontalLine(float p_drawHorizontalLine_1_, float p_drawHorizontalLine_2_, float p_drawHorizontalLine_3_, int p_drawHorizontalLine_4_) {
+    public static void drawHorizontalLine(float p_drawHorizontalLine_1_, float p_drawHorizontalLine_2_, float p_drawHorizontalLine_3_, int p_drawHorizontalLine_4_) {
         if (p_drawHorizontalLine_2_ < p_drawHorizontalLine_1_) {
             float lvt_5_1_ = p_drawHorizontalLine_1_;
             p_drawHorizontalLine_1_ = p_drawHorizontalLine_2_;
@@ -65,7 +65,7 @@ public class RenderUtil {
         drawRect(p_drawHorizontalLine_1_, p_drawHorizontalLine_3_, p_drawHorizontalLine_2_ + 1, p_drawHorizontalLine_3_ + 1, p_drawHorizontalLine_4_);
     }
 
-    protected static void drawVerticalLine(float p_drawVerticalLine_1_, float p_drawVerticalLine_2_, float p_drawVerticalLine_3_, int p_drawVerticalLine_4_) {
+    public static void drawVerticalLine(float p_drawVerticalLine_1_, float p_drawVerticalLine_2_, float p_drawVerticalLine_3_, int p_drawVerticalLine_4_) {
         if (p_drawVerticalLine_3_ < p_drawVerticalLine_2_) {
             float lvt_5_1_ = p_drawVerticalLine_2_;
             p_drawVerticalLine_2_ = p_drawVerticalLine_3_;

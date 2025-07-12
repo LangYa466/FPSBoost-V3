@@ -3,8 +3,7 @@ package cn.fpsboost.util.misc;
 import lombok.Data;
 import cn.fpsboost.Client;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -26,7 +25,10 @@ public class LogUtil {
             while (true) {
                 try {
                     String log = logQueue.take();
-                    System.out.println(log);
+                    // 我服了forge了
+                    // System.out.println(log);
+                    PrintStream original = new PrintStream(new FileOutputStream(FileDescriptor.out));
+                    original.println(log);
                 } catch (InterruptedException ignored) {}
             }
         }, "Log-Dispatcher");

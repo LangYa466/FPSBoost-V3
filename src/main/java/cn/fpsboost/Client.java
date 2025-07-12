@@ -27,6 +27,7 @@ public class Client implements Wrapper {
     public static ValueManager valueManager;
     public static I18nManager i18nManager;
     public static CommandManager commandManager;
+    public static ClickGUIManager clickGUIManager;
     public static File configDir;
     public static final String web = "https://api.furry.luxe/";
 
@@ -59,6 +60,7 @@ public class Client implements Wrapper {
             dragManager = new DragManager();
             valueManager = new ValueManager();
             commandManager = new CommandManager();
+            clickGUIManager = new ClickGUIManager();
 
             loadAllConfigs();
             logger.info("初始化成功");
