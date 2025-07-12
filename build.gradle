@@ -15,43 +15,17 @@ plugins {
     id "idea"
     id "net.minecraftforge.gradle.forge"
     id "org.spongepowered.mixin"
-    id 'com.github.johnrengelman.shadow' version '4.0.4'
 }
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
+version = '1.0.0'
+
 archivesBaseName = "FPSBoostV3"
-
-shadowJar {
-    archiveBaseName.set(archivesBaseName)
-    archiveClassifier.set('all')
-    archiveVersion.set(project.version)
-
-    mergeServiceFiles()
-
-    manifest {
-        attributes(
-                "FMLCorePlugin": "cn.fpsboost.mixins.MixinLoader",
-                "FMLCorePluginContainsFMLMod": true,
-                "ForceLoadAsMod": true,
-                "TweakClass": "org.spongepowered.asm.launch.MixinTweaker",
-                "TweakOrder": "0",
-                "MixinConfigs": "mixins.fpsboost.json"
-        )
-    }
-}
-
-minecraft {
-    version = "1.8.9-11.15.1.2318-1.8.9"
-    runDir = "run"
-    mappings = "stable_22"
-    makeObfSourceJar = false
-}
 
 repositories {
     mavenCentral()
-
     maven { url 'https://jitpack.io' }
     maven { url = "https://repo.spongepowered.org/maven" }
     maven { url = "https://maven.daporkchop.net/" }
@@ -70,19 +44,13 @@ dependencies {
 
     testCompileOnly("org.projectlombok:lombok:1.18.38")
     testAnnotationProcessor("org.projectlombok:lombok:1.18.38")
-
-    runtimeOnly 'org.spongepowered:mixin:0.7.11-SNAPSHOT'
 }
 
-jar {
-    manifest.attributes(
-            "FMLCorePlugin": "cn.fpsboost.mixins.MixinLoader",
-            "FMLCorePluginContainsFMLMod": true,
-            "ForceLoadAsMod": true,
-            "TweakClass": "org.spongepowered.asm.launch.MixinTweaker",
-            "TweakOrder": "0",
-            "MixinConfigs": "mixins.fpsboost.json",
-    )
+minecraft {
+    version = "1.8.9-11.15.1.2318-1.8.9"
+    runDir = "run"
+    mappings = "stable_20"
+    makeObfSourceJar = false
 }
 
 processResources {
@@ -92,9 +60,9 @@ processResources {
         into 'META-INF'
     }
 
+    // 确保mcmod.info文件被包含在jar包的根目录
     from(sourceSets.main.resources.srcDirs) {
-        exclude '**/*.json'
-        exclude '**/*_at.cfg'
+        include 'mcmod.info'
     }
 
     filesMatching('mcmod.info') {
@@ -103,6 +71,30 @@ processResources {
 }
 
 configurations.runtimeOnly.canBeResolved = true
+
 tasks.named("runClient") {
     classpath += configurations.runtimeClasspath
+}
+
+tasks.named("jar") {
+    from {
+        configurations.runtimeClasspath.findAll {
+            it.name.contains("discord-rpc") || it.name.contains("mixin") && it.name.endsWith(".jar")
+        }.collect { zipTree(it) }
+    }
+
+    manifest {
+        attributes(
+                "FMLCorePlugin": "cn.fpsboost.mixins.MixinLoader",
+                "FMLCorePluginContainsFMLMod": true,
+                "ForceLoadAsMod": true,
+                "TweakClass": "org.spongepowered.asm.launch.MixinTweaker",
+                "TweakOrder": "0",
+                "MixinConfigs": "mixins.fpsboost.json"
+        )
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs += ['-Xlint:unchecked', '-Xlint:deprecation']
 }

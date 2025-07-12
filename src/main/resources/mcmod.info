@@ -1,0 +1,16 @@
+[
+  {
+    "modid": "fpsboost",
+    "name": "FPS Boost V3",
+    "description": "A Minecraft mod to boost FPS",
+    "version": "${version}",
+    "mcversion": "${mcversion}",
+    "url": "",
+    "updateUrl": "",
+    "authorList": ["LangYa466"],
+    "credits": "",
+    "logoFile": "",
+    "screenshots": [],
+    "dependencies": []
+  }
+] 
