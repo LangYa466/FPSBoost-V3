@@ -32,9 +32,12 @@ public class Client implements Wrapper {
 
     public static Thread discordRpcThread;
 
-    public static boolean isDev = true;
+    public static boolean isDev;
 
     public static void initClient() {
+        if (new File(mc.mcDataDir, "fpsboost.test").exists()) {
+            isDev = true;
+        }
         logger.info("初始化中");
         long initTime = System.currentTimeMillis();
 
