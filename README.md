@@ -1,4 +1,2 @@
 # FPSBoost V3
-## have Optfine
-
-![run.png](run.png)
+一个简单的优化模组

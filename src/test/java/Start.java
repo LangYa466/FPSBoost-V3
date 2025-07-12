@@ -1,8 +1,6 @@
-import java.io.File;
-import java.lang.reflect.Field;
 import java.util.Arrays;
 
-import net.fpsboost.Client;
+import cn.fpsboost.Client;
 import net.minecraft.client.main.Main;
 
 public class Start

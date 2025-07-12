@@ -1,7 +1,7 @@
-import net.fpsboost.event.Event;
-import net.fpsboost.event.EventPriority;
-import net.fpsboost.event.EventTarget;
-import net.fpsboost.manager.impl.EventManager;
+import cn.fpsboost.event.Event;
+import cn.fpsboost.event.EventPriority;
+import cn.fpsboost.event.EventTarget;
+import cn.fpsboost.manager.impl.EventManager;
 
 // test代码是ai https://chatgpt.com/share/6830ceca-659c-8010-a803-473346dcfd9f
 public class EventManagerTest {

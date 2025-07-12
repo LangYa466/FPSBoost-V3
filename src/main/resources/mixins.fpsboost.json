@@ -1,0 +1,18 @@
+{
+  "required": true,
+  "minVersion": "0.7.11",
+  "package": "cn.fpsboost.mixins",
+  "refmap": "mixins.fpsboost.refmap.json",
+  "target": "@env(DEFAULT)",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [
+    "MixinMinecraft"
+  ],
+  "client": [
+    "KeyBindingAccessor",
+    "MixinEntityPlayerSP",
+    "MixinGuiIngame",
+    "MixinGuiScreen"
+  ],
+  "server": []
+}
