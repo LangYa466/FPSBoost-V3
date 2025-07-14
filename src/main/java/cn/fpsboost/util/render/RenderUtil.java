@@ -1,5 +1,6 @@
 package cn.fpsboost.util.render;
 
+import cn.fpsboost.screen.ClickGUI;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.WorldRenderer;
@@ -110,5 +111,20 @@ public class RenderUtil {
         mc.getTextureManager().bindTexture(texture);
         drawModalRectWithCustomSizedTexture(x, y, 0, 0, width, height, width, height);
         GlStateManager.disableBlend();
+    }
+
+    public static void drawCircle(float centerX, float centerY, float radius, int color) {
+        int segments = 16;
+        for (int i = 0; i < segments; i++) {
+            float angle1 = (float) (i * 2 * Math.PI / segments);
+            float angle2 = (float) ((i + 1) * 2 * Math.PI / segments);
+
+            float x1 = centerX + (float) Math.cos(angle1) * radius;
+            float y1 = centerY + (float) Math.sin(angle1) * radius;
+            float x2 = centerX + (float) Math.cos(angle2) * radius;
+            float y2 = centerY + (float) Math.sin(angle2) * radius;
+
+            RenderUtil.drawHorizontalLine(x1, x2, y1, color);
+        }
     }
 }

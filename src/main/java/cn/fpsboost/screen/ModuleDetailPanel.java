@@ -9,6 +9,7 @@ import cn.fpsboost.value.impl.BooleanValue;
 import cn.fpsboost.value.impl.ModeValue;
 import cn.fpsboost.value.impl.NumberValue;
 import cn.fpsboost.value.impl.TextValue;
+import lombok.Getter;
 
 import java.awt.Color;
 
@@ -19,16 +20,16 @@ import java.awt.Color;
 public class ModuleDetailPanel {
     private Module module;
     private int x, y, width, height;
+    @Getter
     private boolean visible = false;
     private float animationProgress = 0.0f;
     private long lastAnimationTime;
     
     // 滑动相关
+    @Getter
     private boolean isDraggingSlider = false;
     private Value<?> draggedValue = null;
-    private int dragStartX = 0;
-    private float dragStartValue = 0.0f;
-    
+
     // 颜色主题
     private static final int PANEL_BACKGROUND = new Color(25, 35, 55, 220).getRGB();
     private static final int HEADER_COLOR = new Color(100, 150, 255, 180).getRGB();
@@ -37,10 +38,7 @@ public class ModuleDetailPanel {
     private static final int TEXT_COLOR = new Color(220, 230, 255).getRGB();
     private static final int DISABLED_COLOR = new Color(100, 100, 120).getRGB();
     private static final int ACCENT_COLOR = new Color(80, 130, 235).getRGB();
-    private static final int SLIDER_BG_COLOR = new Color(60, 60, 80).getRGB();
-    private static final int SLIDER_FILL_COLOR = new Color(100, 150, 255).getRGB();
-    private static final int SLIDER_HOVER_COLOR = new Color(120, 170, 255).getRGB();
-    
+
     public ModuleDetailPanel() {
         this.lastAnimationTime = System.currentTimeMillis();
     }
@@ -118,7 +116,7 @@ public class ModuleDetailPanel {
     }
     
     private void drawValues(int mouseX, int mouseY, int maxHeight) {
-        int valueY = y + 35;
+        int valueY = y + 32;
         int valueHeight = 25;
         int valueWidth = width - 20;
         int valueX = x + 10;
@@ -134,7 +132,7 @@ public class ModuleDetailPanel {
             RenderUtil.drawRect(valueX, valueY, valueX + valueWidth, valueY + valueHeight, bgColor);
             
             // Value名称
-            FontUtil.font18.drawString(value.getName(), valueX + 5, valueY + 5, TEXT_COLOR);
+            FontUtil.font18.drawString(value.getName(), valueX + 5, valueY + 8, TEXT_COLOR);
             
             // Value值
             drawValueContent(value, valueX + valueWidth - 100, valueY, 90, valueHeight, hovered);
@@ -182,70 +180,46 @@ public class ModuleDetailPanel {
         Number min = numberValue.getMin();
         Number max = numberValue.getMax();
         Number inc = numberValue.getInc();
-        
-        // 显示当前值（根据增量调整精度）
-        String valueStr;
-        if (inc.floatValue() >= 1.0f) {
-            valueStr = String.format("%.0f", value.floatValue());
-        } else if (inc.floatValue() >= 0.1f) {
-            valueStr = String.format("%.1f", value.floatValue());
-        } else {
-            valueStr = String.format("%.2f", value.floatValue());
-        }
-        FontUtil.font18.drawString(valueStr, x + 5, y + 5, TEXT_COLOR);
-        
-        // 显示范围信息（悬停时）
-        if (hovered) {
-            String rangeStr = String.format("%.0f-%.0f", min.floatValue(), max.floatValue());
-            FontUtil.font18.drawString(rangeStr, x + 5, y + height - 12, DISABLED_COLOR);
-        }
-        
-        // 绘制滑块背景
-        int sliderHeight = 6;
-        int sliderY = y + height - 10;
-        int sliderWidth = width - 10;
-        int sliderX = x + 5;
-        
-        // 绘制滑块轨道
-        RenderUtil.drawRect(sliderX, sliderY, sliderX + sliderWidth, sliderY + sliderHeight, SLIDER_BG_COLOR);
-        RenderUtil.drawOutline(sliderX, sliderY, sliderWidth, sliderHeight, new Color(80, 80, 100).getRGB());
-        
-        // 计算滑块位置和进度
+
+        // 滑块参数
+        int sliderHeight = 9;
+        int sliderY = y + height / 2;
+        int sliderWidth = width - 30;
+        int sliderX = x + 15;
+
+        // 计算进度
         float progress = (value.floatValue() - min.floatValue()) / (max.floatValue() - min.floatValue());
         progress = Math.max(0, Math.min(1, progress));
-        
-        // 绘制填充进度
         int fillWidth = (int)(sliderWidth * progress);
-        if (fillWidth > 0) {
-            RenderUtil.drawRect(sliderX, sliderY, sliderX + fillWidth, sliderY + sliderHeight, SLIDER_FILL_COLOR);
-        }
-        
-        // 绘制滑块
-        int sliderSize = 12;
-        int sliderPos = (int)(sliderX + progress * sliderWidth - sliderSize / 2);
-        int sliderColor = (hovered || draggedValue == numberValue) ? SLIDER_HOVER_COLOR : SLIDER_FILL_COLOR;
-        
-        // 绘制滑块阴影
-        RenderUtil.drawRect(sliderPos + 1, sliderY - 3 + 1, sliderPos + sliderSize + 1, sliderY + sliderHeight + 3 + 1, 
-            new Color(0, 0, 0, 50).getRGB());
-        
-        // 绘制滑块主体
-        RenderUtil.drawRect(sliderPos, sliderY - 3, sliderPos + sliderSize, sliderY + sliderHeight + 3, sliderColor);
-        RenderUtil.drawOutline(sliderPos, sliderY - 3, sliderSize, sliderHeight + 6, new Color(150, 200, 255).getRGB());
-        
-        // 绘制滑块中心线
-        RenderUtil.drawHorizontalLine(sliderPos + 2, sliderPos + sliderSize - 2, sliderY + sliderHeight / 2, 
-            new Color(200, 220, 255).getRGB());
-        
-        // 绘制刻度标记（如果范围不是太大）
-        if (max.floatValue() - min.floatValue() <= 20) {
-            drawSliderTicks(sliderX, sliderY, sliderWidth, sliderHeight, min.floatValue(), max.floatValue());
-        }
-        
-        // 调试信息 - 显示滑块区域边界（仅在开发模式下）
-        if (hovered && cn.fpsboost.Client.isDev) {
-            RenderUtil.drawOutline(sliderX, sliderY - 3, sliderWidth, sliderHeight + 6, new Color(255, 255, 0).getRGB());
-        }
+
+        // 滑块轨道
+        RenderUtil.drawRect(sliderX, sliderY, sliderX + sliderWidth, sliderY + sliderHeight, new Color(60, 80, 120, 180).getRGB());
+        RenderUtil.drawRect(sliderX, sliderY, sliderX + fillWidth, sliderY + sliderHeight, hovered ? new Color(120, 170, 255, 220).getRGB() : new Color(100, 150, 255, 200).getRGB());
+
+        // 滑块按钮
+        int knobHeight = 9;
+        int knobCenter = sliderX + fillWidth;
+        float knobWidth = 3;
+        float knobX1 = knobCenter - knobWidth / 2F;
+        float knobX2 = knobCenter + knobWidth / 2F;
+        float knobY1 = sliderY + sliderHeight / 2F - knobHeight / 2F;
+        float knobY2 = sliderY + sliderHeight / 2F + knobHeight / 2F;
+
+        RenderUtil.drawRect(knobX1, knobY1, knobX2, knobY2, hovered ? new Color(120, 170, 255).getRGB() : new Color(100, 150, 255).getRGB());
+        RenderUtil.drawRect(knobX1, knobY1, knobX2, knobY2, Color.WHITE.getRGB());
+
+        // 当前值
+        String valueStr = inc.floatValue() >= 1.0f ? String.format("%.0f", value.floatValue())
+                      : inc.floatValue() >= 0.1f ? String.format("%.1f", value.floatValue())
+                      : String.format("%.2f", value.floatValue());
+        int valueWidth = FontUtil.font18.getStringWidth(valueStr);
+        FontUtil.font18.drawString(valueStr, knobCenter - valueWidth / 2, sliderY - 13, new Color(120, 200, 255).getRGB());
+
+        // 最小值/最大值
+        String minStr = String.format("%.0f", min.floatValue());
+        String maxStr = String.format("%.0f", max.floatValue());
+        FontUtil.font16.drawString(minStr, sliderX - FontUtil.font16.getStringWidth(minStr) - 2, sliderY + sliderHeight / 2 - 4, new Color(150, 150, 180).getRGB());
+        FontUtil.font16.drawString(maxStr, sliderX + sliderWidth + 4, sliderY + sliderHeight / 2 - 4, new Color(150, 150, 180).getRGB());
     }
     
     private void drawSliderTicks(int sliderX, int sliderY, int sliderWidth, int sliderHeight, float min, float max) {
@@ -268,12 +242,12 @@ public class ModuleDetailPanel {
         String[] modes = modeValue.getModes();
         
         // 显示当前模式
-        FontUtil.font18.drawString(currentMode, x + 5, y + 5, TEXT_COLOR);
+        FontUtil.font18.drawString(currentMode, x + 5, y + 8, TEXT_COLOR);
         
         // 绘制模式切换按钮
         String switchBtn = hovered ? "◀▶" : "◀▶";
         int btnColor = hovered ? ACCENT_COLOR : DISABLED_COLOR;
-        FontUtil.font18.drawString(switchBtn, x + width - 25, y + 5, btnColor);
+        FontUtil.font18.drawString(switchBtn, x + width - 25, y + 8, btnColor);
     }
     
     private void drawTextValue(TextValue textValue, int x, int y, int width, int height, boolean hovered) {
@@ -295,7 +269,7 @@ public class ModuleDetailPanel {
         Number max = numberValue.getMax();
         Number inc = numberValue.getInc();
         
-        String tooltipText = String.format("%s: %.2f (%.0f-%.0f, 步长:%.1f)", 
+        String tooltipText = String.format("%s: %.2f (%.0f-%.0f, Inc:%.1f)",
             numberValue.getName(), value.floatValue(), min.floatValue(), max.floatValue(), inc.floatValue());
         
         int tooltipWidth = FontUtil.font18.getStringWidth(tooltipText) + 10;
@@ -337,40 +311,20 @@ public class ModuleDetailPanel {
         // 计算实际显示高度
         int actualHeight = (int) (height * animationProgress);
         if (actualHeight <= 0) return false;
-        
-        boolean result = mouseX >= x && mouseX <= x + width && 
+
+        return mouseX >= x && mouseX <= x + width &&
                mouseY >= y && mouseY <= y + actualHeight;
-        
-        // 调试信息
-        if (cn.fpsboost.Client.isDev && result) {
-            System.out.printf("鼠标在详情面板上: x=%d, y=%d, panelX=%d, panelY=%d, width=%d, height=%d%n", 
-                mouseX, mouseY, x, y, width, actualHeight);
-        }
-        
-        return result;
     }
     
     public boolean isCloseButtonHovered(int mouseX, int mouseY) {
         if (!visible) return false;
-        
-        boolean result = mouseX >= x + width - 20 && mouseX <= x + width - 5 &&
+
+        return mouseX >= x + width - 20 && mouseX <= x + width - 5 &&
                mouseY >= y + 5 && mouseY <= y + 20;
-        
-        // 调试信息
-        if (cn.fpsboost.Client.isDev && result) {
-            System.out.println("鼠标在关闭按钮上");
-        }
-        
-        return result;
     }
     
     public void onMouseClick(int mouseX, int mouseY, int mouseButton) {
         if (!visible || module == null) return;
-        
-        // 调试信息
-        if (cn.fpsboost.Client.isDev) {
-            System.out.printf("ModuleDetailPanel鼠标点击: x=%d, y=%d, button=%d%n", mouseX, mouseY, mouseButton);
-        }
         
         // 检查关闭按钮
         if (isCloseButtonHovered(mouseX, mouseY)) {
@@ -389,7 +343,7 @@ public class ModuleDetailPanel {
                             mouseY >= valueY && mouseY <= valueY + valueHeight;
             
             if (hovered) {
-                if (cn.fpsboost.Client.isDev) {
+                if (Client.isDev) {
                     System.out.printf("点击在Value上: %s, 类型: %s%n", value.getName(), value.getClass().getSimpleName());
                 }
                 handleValueClick(value, mouseX, mouseY, mouseButton, valueX, valueY, valueWidth, valueHeight);
@@ -450,14 +404,6 @@ public class ModuleDetailPanel {
                 if (mouseButton == 0) { // 左键拖拽
                     isDraggingSlider = true;
                     draggedValue = value;
-                    dragStartX = mouseX;
-                    dragStartValue = numberValue.getValue().floatValue();
-                    
-                    // 调试信息
-                    if (cn.fpsboost.Client.isDev) {
-                        System.out.printf("开始滑块拖拽: mouseX=%d, mouseY=%d, sliderX=%d, sliderY=%d%n", 
-                            mouseX, mouseY, sliderX, sliderY);
-                    }
                 }
             } else {
                 // 点击滑块区域外，直接跳转到对应位置
@@ -475,12 +421,6 @@ public class ModuleDetailPanel {
                 }
                 
                 numberValue.setValue(newValue);
-                
-                // 调试信息
-                if (cn.fpsboost.Client.isDev) {
-                    System.out.printf("滑块点击跳转: mouseX=%d, progress=%.2f, value=%.2f%n", 
-                        mouseX, clickProgress, newValue);
-                }
             }
         }
     }
@@ -520,12 +460,6 @@ public class ModuleDetailPanel {
                     newValue = Math.max(min, Math.min(max, newValue));
                     
                     numberValue.setValue(newValue);
-                    
-                    // 调试信息
-                    if (Client.isDev) {
-                        System.out.printf("滑块拖拽: mouseX=%d, sliderX=%d, progress=%.2f, value=%.2f%n", 
-                            mouseX, sliderX, dragProgress, newValue);
-                    }
                     break;
                 }
                 
@@ -536,49 +470,18 @@ public class ModuleDetailPanel {
     
     public void onMouseRelease() {
         if (isDraggingSlider) {
-            if (cn.fpsboost.Client.isDev) {
+            if (Client.isDev) {
                 System.out.println("滑块拖拽结束");
             }
         }
         isDraggingSlider = false;
         draggedValue = null;
     }
-    
-    public boolean isDraggingSlider() {
-        return isDraggingSlider;
-    }
-    
+
     public boolean isDraggingValue() {
         return draggedValue != null;
     }
-    
-    // 测试方法 - 在开发模式下验证滑块功能
-    public void testSliderFunctionality() {
-        if (!cn.fpsboost.Client.isDev) return;
-        
-        System.out.println("=== 滑块功能测试 ===");
-        System.out.printf("面板位置: x=%d, y=%d, width=%d, height=%d%n", x, y, width, height);
-        System.out.printf("可见性: %s, 动画进度: %.2f%n", visible, animationProgress);
-        
-        if (module != null) {
-            System.out.printf("模块: %s, Value数量: %d%n", module.getName(), module.getValues().size());
-            
-            for (Value<?> value : module.getValues()) {
-                if (value instanceof NumberValue) {
-                    NumberValue nv = (NumberValue) value;
-                    System.out.printf("  NumberValue: %s = %.2f (%.0f-%.0f, 步长:%.1f)%n", 
-                        nv.getName(), nv.getValue().floatValue(), 
-                        nv.getMin().floatValue(), nv.getMax().floatValue(), nv.getInc().floatValue());
-                }
-            }
-        }
-        System.out.println("==================");
-    }
-    
-    public boolean isVisible() {
-        return visible;
-    }
-    
+
     public void hide() {
         this.visible = false;
     }
