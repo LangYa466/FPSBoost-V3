@@ -6,6 +6,8 @@ import cn.fpsboost.module.Category;
 import cn.fpsboost.module.Module;
 import cn.fpsboost.util.render.RenderUtil;
 import cn.fpsboost.util.render.font.FontUtil;
+import lombok.Data;
+import lombok.Setter;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GlStateManager;
@@ -56,6 +58,10 @@ public class ClickGUI extends GuiScreen {
     private int scrollBarHoverColor = new Color(120, 170, 255, 200).getRGB();
     private int scrollBarBackgroundColor = new Color(30, 45, 70, 100).getRGB();
     
+    // 横向滚动变量
+    private float scrollX = 0.0f;
+    private float maxScrollX = 0.0f;
+    
     // 动画相关
     private float animationProgress = 0.0f;
     private long lastAnimationTime;
@@ -67,6 +73,11 @@ public class ClickGUI extends GuiScreen {
     private int middleDragStartX, middleDragStartY;
     private float middleDragStartScrollY;
     private CategoryPanel draggedPanel = null;
+    
+    // 拖动判定相关变量
+    private boolean isPanelDragPending = false;
+    private CategoryPanel pendingPanel = null;
+    private int pendingPressX = 0, pendingPressY = 0;
     
     public ClickGUI() {
         this.categoryPanels = new ArrayList<>();
@@ -112,6 +123,7 @@ public class ClickGUI extends GuiScreen {
         
         // 重置滚动
         scrollY = 0.0f;
+        scrollX = 0.0f; // 重置横向滚动
         
         // 计算最大滚动距离
         calculateMaxScroll();
@@ -133,29 +145,31 @@ public class ClickGUI extends GuiScreen {
     private void calculateMaxScroll() {
         ScaledResolution sr = new ScaledResolution(mc);
         int screenHeight = sr.getScaledHeight();
-        int contentHeight = 0;
-        
-        // 计算所有面板的总高度
+        int screenWidth = sr.getScaledWidth();
+        if (categoryPanels.isEmpty()) {
+            maxScrollY = 0;
+            maxScrollX = 0;
+            return;
+        }
+        // 纵向内容高度
+        int minY = Integer.MAX_VALUE, maxY = Integer.MIN_VALUE;
+        // 横向内容宽度
+        int minX = Integer.MAX_VALUE, maxX = Integer.MIN_VALUE;
         for (CategoryPanel panel : categoryPanels) {
-            int panelBottom = panel.getY() + panel.getHeight();
-            contentHeight = Math.max(contentHeight, panelBottom);
+            minY = Math.min(minY, panel.getY());
+            maxY = Math.max(maxY, panel.getY() + panel.getHeight());
+            minX = Math.min(minX, panel.getX());
+            maxX = Math.max(maxX, panel.getX() + panel.getWidth());
         }
-        
-        // 添加一些底部边距
-        contentHeight += 50;
-        
-        // 计算最大滚动距离
+        int contentHeight = maxY - minY + 50; // 50为底部边距
+        int contentWidth = maxX - minX + 50;  // 50为右侧边距
         maxScrollY = Math.max(0, contentHeight - screenHeight + 100);
-        
-        // 确保当前滚动位置在有效范围内
-        if (scrollY > maxScrollY) {
-            scrollY = maxScrollY;
-        }
-        
-        // 调试信息
+        maxScrollX = Math.max(0, contentWidth - screenWidth + 100);
+        if (scrollY > maxScrollY) scrollY = maxScrollY;
+        if (scrollX > maxScrollX) scrollX = maxScrollX;
         if (cn.fpsboost.Client.isDev) {
-            System.out.printf("计算滚动范围: contentHeight=%d, screenHeight=%d, maxScrollY=%.1f%n", 
-                contentHeight, screenHeight, maxScrollY);
+            System.out.printf("计算滚动范围: contentHeight=%d, screenHeight=%d, maxScrollY=%.1f, contentWidth=%d, screenWidth=%d, maxScrollX=%.1f\n", 
+                contentHeight, screenHeight, maxScrollY, contentWidth, screenWidth, maxScrollX);
         }
     }
     
@@ -234,11 +248,11 @@ public class ClickGUI extends GuiScreen {
         
         // 应用滚动变换
         GlStateManager.pushMatrix();
-        GlStateManager.translate(0, -scrollY, 0);
+        GlStateManager.translate(-scrollX, -scrollY, 0);
         
         // 绘制分类面板
         for (CategoryPanel panel : categoryPanels) {
-            panel.draw(mouseX, mouseY + (int)scrollY);
+            panel.draw(mouseX + (int)scrollX, mouseY + (int)scrollY);
         }
         
         GlStateManager.popMatrix();
@@ -248,6 +262,9 @@ public class ClickGUI extends GuiScreen {
         
         // 绘制右侧滚动条
         drawScrollBar(mouseX, mouseY);
+        
+        // 绘制下方横向滚动条
+        drawHorizontalScrollBar(mouseX, mouseY);
         
         // 绘制滚动状态提示
         drawScrollStatus(mouseX, mouseY);
@@ -378,6 +395,32 @@ public class ClickGUI extends GuiScreen {
             // 绘制工具提示
             if (hovered) {
                 String tooltip = String.format("滚动: %.0f / %.0f", scrollY, maxScrollY);
+                drawScrollTooltip(tooltip, mouseX, mouseY);
+            }
+        }
+    }
+    
+    private void drawHorizontalScrollBar(int mouseX, int mouseY) {
+        ScaledResolution sr = new ScaledResolution(mc);
+        int screenWidth = sr.getScaledWidth();
+        int screenHeight = sr.getScaledHeight();
+        int scrollBarY = screenHeight - 15;
+        int scrollBarHeight = 8;
+        int scrollBarX = 50;
+        int scrollBarWidth = screenWidth - 100;
+        // 背景
+        RenderUtil.drawRect(scrollBarX, scrollBarY, scrollBarX + scrollBarWidth, scrollBarY + scrollBarHeight, scrollBarBackgroundColor);
+        if (maxScrollX > 0) {
+            float scrollProgress = scrollX / maxScrollX;
+            int sliderWidth = Math.max(30, (int)(scrollBarWidth * (scrollBarWidth / (maxScrollX + scrollBarWidth))));
+            int sliderX = scrollBarX + (int)((scrollBarWidth - sliderWidth) * scrollProgress);
+            boolean hovered = mouseY >= scrollBarY && mouseY <= scrollBarY + scrollBarHeight && mouseX >= sliderX && mouseX <= sliderX + sliderWidth;
+            int sliderColor = hovered ? scrollBarHoverColor : scrollBarColor;
+            RenderUtil.drawRect(sliderX, scrollBarY, sliderX + sliderWidth, scrollBarY + scrollBarHeight, sliderColor);
+            RenderUtil.drawOutline(sliderX, scrollBarY, sliderWidth, scrollBarHeight, hovered ? new Color(150, 200, 255).getRGB() : new Color(100, 150, 255, 100).getRGB());
+            // 工具提示
+            if (hovered) {
+                String tooltip = String.format("横向滚动: %.0f / %.0f", scrollX, maxScrollX);
                 drawScrollTooltip(tooltip, mouseX, mouseY);
             }
         }
@@ -519,20 +562,13 @@ public class ClickGUI extends GuiScreen {
             if (panel.isMouseOver(mouseX, adjustedMouseY)) {
                 if (mouseButton == 0) { // 左键
                     if (panel.isHeaderHovered(mouseX, adjustedMouseY)) {
-                        // 先处理展开/收起功能
-                        panel.onMouseClick(mouseX, adjustedMouseY, mouseButton);
-                        
-                        // 如果不是拖拽操作，则设置拖拽状态
-                        if (!panel.isExpanded()) {
-                            // 如果面板收起，不设置拖拽状态
-                            break;
-                        } else {
-                            // 如果面板展开，可以拖拽
-                            isDragging = true;
-                            draggedPanel = panel;
-                            dragStartX = mouseX - panel.getX();
-                            dragStartY = adjustedMouseY - panel.getY();
-                        }
+                        // 只记录按下，不立即切换展开
+                        isPanelDragPending = true;
+                        pendingPanel = panel;
+                        pendingPressX = mouseX;
+                        pendingPressY = adjustedMouseY;
+                        dragStartX = mouseX - panel.getX();
+                        dragStartY = adjustedMouseY - panel.getY();
                     } else {
                         panel.onMouseClick(mouseX, adjustedMouseY, mouseButton);
                     }
@@ -602,6 +638,16 @@ public class ClickGUI extends GuiScreen {
             detailPanel.onMouseRelease();
         }
         
+        // 处理面板拖动/展开
+        if (isPanelDragPending && pendingPanel != null) {
+            // 没有拖动，判定为点击，切换展开
+            int adjustedMouseY = mouseY + (int)scrollY;
+            if (pendingPanel.isHeaderHovered(mouseX, adjustedMouseY)) {
+                pendingPanel.setExpanded(!pendingPanel.isExpanded());
+            }
+        }
+        isPanelDragPending = false;
+        pendingPanel = null;
         isDragging = false;
         isDraggingScrollBar = false;
         draggedPanel = null;
@@ -647,6 +693,16 @@ public class ClickGUI extends GuiScreen {
             return;
         }
         
+        // 拖动判定
+        if (isPanelDragPending && pendingPanel != null) {
+            int dx = Math.abs(mouseX - pendingPressX);
+            int dy = Math.abs((mouseY + (int)scrollY) - pendingPressY);
+            if (dx > 5 || dy > 5) { // 超过5像素判定为拖动
+                isDragging = true;
+                draggedPanel = pendingPanel;
+                isPanelDragPending = false;
+            }
+        }
         // 处理面板拖拽
         if (isDragging && draggedPanel != null) {
             int adjustedMouseY = mouseY + (int)scrollY;
@@ -814,14 +870,25 @@ public class ClickGUI extends GuiScreen {
             int mouseX = Mouse.getEventX() * width / mc.displayWidth;
             int mouseY = height - Mouse.getEventY() * height / mc.displayHeight - 1;
             
-            // 检查鼠标是否在详情面板上
-            if (detailPanel.isVisible() && detailPanel.isMouseOver(mouseX, mouseY)) {
-                detailPanel.onMouseWheel(mouseX, mouseY, wheel);
-                return;
+            boolean shift = Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT);
+            if (shift) {
+                // 横向滚动
+                float scrollSpeed = 20.0f;
+                if (wheel > 0) {
+                    scrollX -= scrollSpeed;
+                } else {
+                    scrollX += scrollSpeed;
+                }
+                scrollX = Math.max(0, Math.min(scrollX, maxScrollX));
+            } else {
+                // 纵向滚动
+                // 检查鼠标是否在详情面板上
+                if (detailPanel.isVisible() && detailPanel.isMouseOver(mouseX, mouseY)) {
+                    detailPanel.onMouseWheel(mouseX, mouseY, wheel);
+                    return;
+                }
+                handleMainScroll(wheel, mouseX, mouseY);
             }
-            
-            // 处理主界面的滚动
-            handleMainScroll(wheel, mouseX, mouseY);
         }
     }
     
@@ -861,7 +928,7 @@ public class ClickGUI extends GuiScreen {
     private void drawScrollStatus(int mouseX, int mouseY) {
         // 在开发模式下显示滚动状态
         if (cn.fpsboost.Client.isDev) {
-            String statusText = String.format("滚动: %.0f/%.0f", scrollY, maxScrollY);
+            String statusText = String.format("滚动: %.0f/%.0f, 横向: %.0f/%.0f", scrollY, maxScrollY, scrollX, maxScrollX);
             if (isMiddleDragging) {
                 statusText += " [中键拖拽中]";
             }
@@ -874,7 +941,7 @@ public class ClickGUI extends GuiScreen {
         
         // 显示滚动提示（当有内容可滚动时）
         if (maxScrollY > 0 && scrollY == 0) {
-            String hintText = "使用鼠标滚轮或中键拖拽滚动";
+            String hintText = "使用鼠标滚轮或中键拖拽滚动，按住Shift横向滚动";
             int hintWidth = FontUtil.font18.getStringWidth(hintText);
             int hintX = (width - hintWidth) / 2;
             int hintY = height - 30;
@@ -886,6 +953,7 @@ public class ClickGUI extends GuiScreen {
     // 搜索框内部类
     private class SearchBox {
         private int x, y, width, height;
+        @Setter
         private String text = "";
         private boolean focused = false;
         private long cursorBlinkTime = 0;
@@ -968,13 +1036,10 @@ public class ClickGUI extends GuiScreen {
                 cursorBlinkTime = System.currentTimeMillis();
             }
         }
-        
-        public void setText(String text) {
-            this.text = text;
-        }
     }
     
     // 分类面板内部类
+    @Data
     private class CategoryPanel {
         private Category category;
         private int x, y, width, height;
@@ -1114,43 +1179,18 @@ public class ClickGUI extends GuiScreen {
         public boolean isMouseOver(int mouseX, int mouseY) {
             // 计算实际显示高度
             int actualHeight = expanded ? height : (int)(25 + (height - 25) * expandAnimation);
-            boolean result = mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + actualHeight;
-            
-            // 调试信息
-            if (cn.fpsboost.Client.isDev && result) {
-                System.out.printf("鼠标在面板上: %s (x=%d, y=%d, panelX=%d, panelY=%d, width=%d, height=%d, actualHeight=%d)%n", 
-                    category.name(), mouseX, mouseY, x, y, width, height, actualHeight);
-            }
-            
-            return result;
+
+            return mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + actualHeight;
         }
-        
+
         public boolean isHeaderHovered(int mouseX, int mouseY) {
-            boolean result = mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + 25;
-            
-            // 调试信息
-            if (cn.fpsboost.Client.isDev && result) {
-                System.out.printf("鼠标悬停在标题栏: %s (x=%d, y=%d, panelX=%d, panelY=%d, width=%d)%n", 
-                    category.name(), mouseX, mouseY, x, y, width);
-            }
-            
-            return result;
+            return mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + 25;
         }
         
         public void onMouseClick(int mouseX, int mouseY, int mouseButton) {
-            // 调试信息
-            if (cn.fpsboost.Client.isDev) {
-                System.out.printf("CategoryPanel点击: %s, mouseX=%d, mouseY=%d, button=%d, headerHovered=%s%n", 
-                    category.name(), mouseX, mouseY, mouseButton, isHeaderHovered(mouseX, mouseY));
-            }
-            
             if (isHeaderHovered(mouseX, mouseY)) {
                 expanded = !expanded;
-                
-                // 调试信息
-                if (cn.fpsboost.Client.isDev) {
-                    System.out.printf("切换展开状态: %s -> %s%n", category.name(), expanded ? "展开" : "收起");
-                }
+
                 return;
             }
             
@@ -1216,25 +1256,6 @@ public class ClickGUI extends GuiScreen {
             if (ClickGUI.INSTANCE != null) {
                 ClickGUI.INSTANCE.forceUpdateScrollRange();
             }
-        }
-        
-        public void setExpanded(boolean expanded) {
-            this.expanded = expanded;
-        }
-        
-        public boolean isExpanded() {
-            return expanded;
-        }
-        
-        public Category getCategory() {
-            return category;
-        }
-        
-        public int getX() { return x; }
-        public int getY() { return y; }
-
-        public int getHeight() {
-            return height;
         }
     }
     

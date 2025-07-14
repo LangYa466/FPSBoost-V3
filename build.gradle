@@ -79,7 +79,7 @@ tasks.named("runClient") {
 tasks.named("jar") {
     from {
         configurations.runtimeClasspath.findAll {
-            it.name.contains("discord-rpc") || it.name.contains("mixin") && it.name.endsWith(".jar")
+            (it.name.contains("discord-rpc") || it.name.contains("mixin")) && it.name.endsWith(".jar")
         }.collect { zipTree(it) }
     }
 
@@ -93,6 +93,8 @@ tasks.named("jar") {
                 "MixinConfigs": "mixins.fpsboost.json"
         )
     }
+
+    exclude 'META-INF/*.RSA', 'META-INF/*.DSA', 'META-INF/*.SF'
 }
 
 tasks.withType(JavaCompile).configureEach {
