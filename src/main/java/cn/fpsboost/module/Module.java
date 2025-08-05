@@ -1,14 +1,17 @@
 package cn.fpsboost.module;
 
+import cn.fpsboost.util.lang.Langs;
 import lombok.*;
 import cn.fpsboost.Client;
 import cn.fpsboost.Wrapper;
 import cn.fpsboost.manager.impl.I18nManager;
 import cn.fpsboost.util.drag.Drag;
 import cn.fpsboost.value.Value;
+import net.minecraft.client.resources.I18n;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author LangYa466
@@ -18,6 +21,8 @@ import java.util.List;
 @Setter
 public class Module implements Wrapper {
     protected final String name;
+    // skid留下来的 懒得弄i18n的
+    protected String cnName;
     protected final Category category;
     protected boolean enabled;
     protected final List<Value<?>> values = new ArrayList<>();
@@ -35,6 +40,13 @@ public class Module implements Wrapper {
     }
 
     public String getDisplayName() {
+        if (Objects.equals(I18nManager.get(name), name)) {
+            if (Client.i18nManager.currentLang == Langs.CN) {
+                return cnName;
+            } else {
+                return name;
+            }
+        }
         return I18nManager.get(name);
     }
 

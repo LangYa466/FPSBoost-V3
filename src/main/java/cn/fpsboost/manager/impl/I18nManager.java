@@ -17,6 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class I18nManager extends Manager {
     private static Map<String, String> i18nMap;
+    public Langs currentLang = Langs.CN;
 
     public I18nManager() {
         super("I18n");
@@ -25,7 +26,7 @@ public class I18nManager extends Manager {
     @Override
     protected void init() {
         try {
-            loadLang(Langs.CN);
+            loadLang(currentLang);
         } catch (Exception e) {
             logger.error("读取语言文件出错", e);
         }

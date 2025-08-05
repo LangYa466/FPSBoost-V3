@@ -1,5 +1,9 @@
 package cn.fpsboost.manager.impl;
 
+import cn.fpsboost.util.misc.MoveUtil;
+import cn.fpsboost.util.misc.PingUtil;
+import cn.fpsboost.util.misc.PotionUtil;
+import cn.fpsboost.util.misc.TimeUtil;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
@@ -22,6 +26,8 @@ import cn.fpsboost.module.impl.render.ModuleList;
 import cn.fpsboost.module.impl.render.RenderMyNameTag;
 import cn.fpsboost.socket.ClientIRC;
 import cn.fpsboost.value.Value;
+import net.minecraft.client.Minecraft;
+import net.minecraft.potion.Potion;
 
 import java.io.File;
 import java.io.FileReader;
@@ -29,6 +35,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Supplier;
+
+import static cn.fpsboost.util.misc.PotionUtil.*;
 
 /**
  * @author LangYa466
@@ -54,9 +63,17 @@ public class ModuleManager extends Manager {
         addModule(new NameProtect());
 
         // Render
-        addModule(new FPSDisplay());
         addModule(new ModuleList());
         addModule(new RenderMyNameTag());
+        addDynamicTextDisplayElement("SpeedDisplay", "速度显示", () -> MoveUtil.getBPS() + " m/s");
+        addDynamicTextDisplayElement("TimeDisplay", "时间显示", () -> "时间: " + TimeUtil.getCurrentTimeStringHHMM());
+        addDynamicTextDisplayElement("PingDisplay", "延迟显示", () -> PingUtil.getPing() + " ms");
+        addDynamicTextDisplayElement("FPSDisplay", "FPS显示", () -> Minecraft.getDebugFPS() + " FPS");
+        addDynamicTextDisplayElement("PosYDisplay", "Y轴显示", () -> "Y: " + (int) mc.thePlayer.posY);
+        addDynamicTextDisplayElement("PotionCountDisplay", "药水数量显示", () -> {
+            int amount = getPotionsFromInv(Potion.heal);
+            return amount + " " + (amount <= 1 ? "pot" : "pots");
+        });
 
         // Dev
         addModule(new TestDragGUI());
@@ -184,6 +201,10 @@ public class ModuleManager extends Manager {
 
         // dev
         if (Client.isDev) module.setEnabled(true);
+    }
+
+    private void addDynamicTextDisplayElement(String name, String cnName, Supplier<String> textSupplier) {
+        addModule(new TextDisplay(name, cnName, textSupplier));
     }
 
     public Module getModule(String moduleName) {

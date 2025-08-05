@@ -29,6 +29,16 @@ public class DragManager extends Manager {
         super.init();
     }
 
+    @Override
+    public void save() {
+        super.save();
+    }
+
+    @Override
+    public void load() {
+        super.load();
+    }
+
     public List<Drag> getEnabledDrags() {
         return drags.values().stream()
                 .filter(drag -> {
